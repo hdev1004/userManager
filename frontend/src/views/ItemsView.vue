@@ -247,7 +247,13 @@ async function onItemDragEnd() {
       </draggable>
     </AppCard>
 
-    <AppModal :open="showAddCat" title="탭 추가" @close="showAddCat = false">
+    <AppModal
+      :open="showAddCat"
+      title="탭 추가"
+      :dim="false"
+      :draggable="true"
+      @close="showAddCat = false"
+    >
       <div class="vstack" style="gap:16px">
         <AppInput v-model="newCatCode" label="코드" placeholder="예: SPA (영문 대문자 권장)" :maxlength="10" />
         <AppInput v-model="newCatName" label="표시명" placeholder="예: 스파" :maxlength="30" />
@@ -258,7 +264,13 @@ async function onItemDragEnd() {
       </template>
     </AppModal>
 
-    <AppModal :open="showAddItem" title="물품 추가" @close="showAddItem = false">
+    <AppModal
+      :open="showAddItem"
+      title="물품 추가"
+      :dim="false"
+      :draggable="true"
+      @close="showAddItem = false"
+    >
       <div class="vstack" style="gap:16px">
         <AppInput v-model="newItemCode" label="코드" placeholder="예: P30" :maxlength="20" />
         <AppInput v-model="newItemName" label="품명" placeholder="예: 펌" :maxlength="50" />
