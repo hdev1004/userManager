@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ChevronLeft,
@@ -67,10 +67,17 @@ onMounted(load)
 const total = computed(() =>
   items.value.reduce((s, x) => s + x.unit_price * x.quantity, 0),
 )
-const final = computed(() => Math.max(0, total.value - (Number(pointUsed.value) || 0)))
+const effectivePointUsed = computed(() =>
+  paymentMethod.value === 'CARD' ? 0 : Number(pointUsed.value) || 0,
+)
+const final = computed(() => Math.max(0, total.value - effectivePointUsed.value))
 const pointEarned = computed(() =>
   paymentMethod.value === 'CARD' ? 0 : Math.floor(final.value / POINT_PER_WON),
 )
+
+watch(paymentMethod, (m) => {
+  if (m === 'CARD') pointUsed.value = '0'
+})
 
 async function onFile(e: Event) {
   const t = e.target as HTMLInputElement
@@ -109,7 +116,7 @@ async function save() {
   try {
     await paymentsApi.update(payment.value.id, {
       items: items.value.map((x) => ({ ...x, item_name: x.item_name.trim() })),
-      point_used: Number(pointUsed.value) || 0,
+      point_used: effectivePointUsed.value,
       point_earned: pointEarned.value,
       payment_method: paymentMethod.value,
       memo: memo.value,
@@ -168,18 +175,37 @@ const staticBase = computed(() => {
         </div>
       </AppCard>
 
-      <AppCard title="포인트" padding="lg" style="margin-top: 16px">
+      <AppCard
+        v-if="paymentMethod === 'CASH'"
+        title="포인트"
+        padding="lg"
+        style="margin-top: 16px"
+      >
         <div class="grid-2">
           <AppInput v-model="pointUsed" label="사용 포인트" inputmode="numeric" />
           <AppInput
             :model-value="pointEarned.toLocaleString()"
             label="적립 포인트"
             readonly
-            :hint="paymentMethod === 'CARD' ? '카드 결제는 적립되지 않습니다' : '결제 금액 1,000원당 1P 자동 적립'"
+            hint="결제 금액 1,000원당 1P 자동 적립"
           />
         </div>
         <div class="final">
           <span class="t-title-3">결제 금액</span>
+          <span class="num t-title-1" style="color: var(--color-primary)">
+            {{ final.toLocaleString() }}원
+          </span>
+        </div>
+      </AppCard>
+
+      <AppCard
+        v-else
+        title="결제 금액"
+        padding="lg"
+        style="margin-top: 16px"
+      >
+        <div class="final">
+          <span class="t-body-2 text-sub">합계</span>
           <span class="num t-title-1" style="color: var(--color-primary)">
             {{ final.toLocaleString() }}원
           </span>

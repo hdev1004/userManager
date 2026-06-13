@@ -44,8 +44,8 @@ export class PaymentsService {
         throw new NotFoundException('회원을 찾을 수 없습니다.');
       }
       const currentPoint = member.rows[0].point as number;
-      const used = dto.point_used ?? 0;
-      // 카드 결제 시 포인트 적립 금지 (요청된 값과 무관하게 0)
+      // 카드 결제는 포인트 사용/적립 모두 금지
+      const used = method === 'CARD' ? 0 : (dto.point_used ?? 0);
       const earned = method === 'CARD' ? 0 : (dto.point_earned ?? 0);
 
       if (used > currentPoint) {
@@ -132,8 +132,11 @@ export class PaymentsService {
       }
       if (dto.point_used !== undefined) totals.used = dto.point_used;
       if (dto.point_earned !== undefined) totals.earned = dto.point_earned;
-      // 카드 결제일 때는 적립 0 강제
-      if (method === 'CARD') totals.earned = 0;
+      // 카드 결제일 때는 사용/적립 모두 0 강제
+      if (method === 'CARD') {
+        totals.used = 0;
+        totals.earned = 0;
+      }
       const finalAmt = Math.max(0, totals.total - totals.used);
 
       await client.query(
