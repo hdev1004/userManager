@@ -69,21 +69,28 @@ function goDetail() {
   emit('close')
   router.push(`/members/${id}`)
 }
+
+function goPayment(paymentId: number) {
+  if (!member.value) return
+  const mid = member.value.id
+  emit('close')
+  router.push(`/members/${mid}/payments/${paymentId}`)
+}
 </script>
 
 <template>
-  <AppModal :open="open" :width="520" @close="$emit('close')">
+  <AppModal :open="open" :width="600" @close="$emit('close')">
     <template #title>회원 정보</template>
 
     <div v-if="loading" class="loading t-body-2 text-tert">불러오는 중...</div>
 
     <div v-else-if="member" class="content">
       <header class="head">
-        <div class="head__avatar"><User :size="24" /></div>
+        <div class="head__avatar"><User :size="30" /></div>
         <div class="head__main">
           <div class="head__name">{{ member.name }}</div>
           <div class="head__phone">
-            <Phone :size="16" />
+            <Phone :size="18" />
             <span class="num">{{ fmtPhone(member.phone) }}</span>
           </div>
         </div>
@@ -93,12 +100,14 @@ function goDetail() {
         <div class="stat">
           <span class="stat__label">보유 포인트</span>
           <span class="stat__value num" style="color: var(--color-primary)">
-            {{ member.point.toLocaleString() }}P
+            {{ member.point.toLocaleString() }}<span class="stat__unit">P</span>
           </span>
         </div>
         <div class="stat">
           <span class="stat__label">방문 횟수</span>
-          <span class="stat__value num">{{ member.visit_count }}회</span>
+          <span class="stat__value num">
+            {{ member.visit_count }}<span class="stat__unit">회</span>
+          </span>
         </div>
         <div class="stat">
           <span class="stat__label">가입일</span>
@@ -121,20 +130,22 @@ function goDetail() {
           <span v-else class="t-caption text-tert num">최근 {{ payments.length }}건</span>
         </header>
         <ul v-if="payments.length > 0" class="recent__list">
-          <li v-for="p in payments" :key="p.id" class="recent__row">
-            <span class="recent__date">
-              <Calendar :size="12" />
-              <span class="num">{{ fmtDate(p.paid_at) }}</span>
-            </span>
-            <span class="recent__items">
-              <template v-for="(it, idx) in p.items.slice(0, 2)" :key="it.id">
-                {{ it.item_name }}<span v-if="idx < Math.min(p.items.length, 2) - 1">, </span>
-              </template>
-              <span v-if="p.items.length > 2" class="text-tert">
-                외 {{ p.items.length - 2 }}건
+          <li v-for="p in payments" :key="p.id">
+            <button type="button" class="recent__row" @click="goPayment(p.id)">
+              <span class="recent__date">
+                <Calendar :size="14" />
+                <span class="num">{{ fmtDate(p.paid_at) }}</span>
               </span>
-            </span>
-            <span class="recent__amount num">{{ p.final_amount.toLocaleString() }}원</span>
+              <span class="recent__items">
+                <template v-for="(it, idx) in p.items.slice(0, 2)" :key="it.id">
+                  {{ it.item_name }}<span v-if="idx < Math.min(p.items.length, 2) - 1">, </span>
+                </template>
+                <span v-if="p.items.length > 2" class="text-tert">
+                  외 {{ p.items.length - 2 }}건
+                </span>
+              </span>
+              <span class="recent__amount num">{{ p.final_amount.toLocaleString() }}원</span>
+            </button>
           </li>
         </ul>
       </section>
@@ -158,17 +169,17 @@ function goDetail() {
 .content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .head {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 .head__avatar {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   color: var(--color-primary);
@@ -181,15 +192,17 @@ function goDetail() {
   min-width: 0;
 }
 .head__name {
-  font: var(--font-title-2);
+  font-size: 26px;
+  font-weight: 800;
   color: var(--color-text-strong);
+  letter-spacing: -0.02em;
 }
 .head__phone {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: 17px;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--color-text-strong);
   font-variant-numeric: tabular-nums;
@@ -199,23 +212,31 @@ function goDetail() {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding: 16px;
+  padding: 20px 16px;
   background: var(--color-line-soft);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 .stat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   text-align: center;
 }
 .stat__label {
-  font: var(--font-caption);
-  color: var(--color-text-tert);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 .stat__value {
-  font: var(--font-title-3);
+  font-size: 22px;
+  font-weight: 800;
   color: var(--color-text-strong);
+}
+.stat__unit {
+  font-size: 16px;
+  font-weight: 700;
+  margin-left: 2px;
+  color: var(--color-text-sub);
 }
 
 .memo {
@@ -241,51 +262,66 @@ function goDetail() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .recent__title {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
-  font: var(--font-body-3);
+  font-size: 17px;
   font-weight: 700;
   color: var(--color-text-strong);
+}
+.recent__title :deep(svg) {
+  width: 20px;
+  height: 20px;
 }
 .recent__list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .recent__row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
   background: #fff;
-  border: 1px solid var(--color-line-soft);
+  border: 1px solid var(--color-line);
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.recent__row:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
 }
 .recent__date {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font: var(--font-caption);
-  color: var(--color-text-tert);
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-sub);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .recent__items {
-  font: var(--font-body-3);
-  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-strong);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 .recent__amount {
-  font: var(--font-body-3);
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
   color: var(--color-text-strong);
   white-space: nowrap;
 }
