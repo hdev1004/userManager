@@ -16,11 +16,12 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const toast = useToast()
 
+const POINT_PER_WON = 1000 // 1,000원당 1P 적립
+
 const member = ref<Member | null>(null)
 const items = ref<PaymentItemInput[]>([])
 const memo = ref('')
 const pointUsed = ref('0')
-const pointEarned = ref('0')
 const pendingImage = ref<File | null>(null)
 const saving = ref(false)
 
@@ -37,6 +38,7 @@ const total = computed(() =>
   items.value.reduce((s, x) => s + x.unit_price * x.quantity, 0),
 )
 const final = computed(() => Math.max(0, total.value - (Number(pointUsed.value) || 0)))
+const pointEarned = computed(() => Math.floor(final.value / POINT_PER_WON))
 
 function onFile(e: Event) {
   const t = e.target as HTMLInputElement
@@ -59,7 +61,7 @@ async function submit() {
       member_id: member.value.id,
       items: items.value.map((x) => ({ ...x, item_name: x.item_name.trim() })),
       point_used: Number(pointUsed.value) || 0,
-      point_earned: Number(pointEarned.value) || 0,
+      point_earned: pointEarned.value,
       memo: memo.value.trim() || undefined,
     })
     if (pendingImage.value) {
@@ -103,7 +105,12 @@ async function submit() {
           inputmode="numeric"
           :hint="`보유 ${(member?.point ?? 0).toLocaleString()}P 까지 사용 가능`"
         />
-        <AppInput v-model="pointEarned" label="적립 포인트" inputmode="numeric" />
+        <AppInput
+          :model-value="pointEarned.toLocaleString()"
+          label="적립 포인트"
+          readonly
+          hint="결제 금액 1,000원당 1P 자동 적립"
+        />
       </div>
       <div class="final">
         <span class="t-title-3">결제 금액</span>

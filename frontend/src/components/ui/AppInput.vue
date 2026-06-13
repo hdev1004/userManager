@@ -11,6 +11,7 @@ const props = withDefaults(
     error?: string
     hint?: string
     disabled?: boolean
+    readonly?: boolean
     autofocus?: boolean
     maxlength?: number
   }>(),
@@ -18,6 +19,7 @@ const props = withDefaults(
     type: 'text',
     inputmode: 'text',
     disabled: false,
+    readonly: false,
     autofocus: false,
   },
 )
@@ -39,7 +41,7 @@ const value = computed({
 </script>
 
 <template>
-  <div class="field" :class="{ 'field--error': !!error }">
+  <div class="field" :class="{ 'field--error': !!error, 'field--readonly': readonly }">
     <label v-if="label" :for="uid" class="field__label">{{ label }}</label>
     <input
       :id="uid"
@@ -49,6 +51,7 @@ const value = computed({
       :inputmode="inputmode"
       :placeholder="placeholder"
       :disabled="disabled"
+      :readonly="readonly"
       :autofocus="autofocus"
       :maxlength="maxlength"
       @keydown.enter="emit('enter')"
@@ -92,6 +95,16 @@ const value = computed({
   background: var(--color-bg-hover);
   color: var(--color-text-tert);
   cursor: not-allowed;
+}
+.field--readonly .field__input {
+  background: var(--color-line-soft);
+  color: var(--color-text-strong);
+  border-color: transparent;
+  cursor: default;
+}
+.field--readonly .field__input:focus {
+  box-shadow: none;
+  border-color: transparent;
 }
 .field--error .field__input {
   border-color: var(--color-danger);

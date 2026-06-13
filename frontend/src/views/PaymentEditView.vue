@@ -21,11 +21,12 @@ const props = defineProps<{ id: string; pid: string }>()
 const router = useRouter()
 const toast = useToast()
 
+const POINT_PER_WON = 1000 // 1,000원당 1P 적립
+
 const payment = ref<Payment | null>(null)
 const items = ref<PaymentItemInput[]>([])
 const memo = ref('')
 const pointUsed = ref('0')
-const pointEarned = ref('0')
 const saving = ref(false)
 const uploading = ref(false)
 
@@ -48,7 +49,6 @@ async function load() {
     }))
     memo.value = p.memo ?? ''
     pointUsed.value = String(p.point_used)
-    pointEarned.value = String(p.point_earned)
   } catch (e) {
     toast.error(errorMessage(e))
   }
@@ -59,6 +59,7 @@ const total = computed(() =>
   items.value.reduce((s, x) => s + x.unit_price * x.quantity, 0),
 )
 const final = computed(() => Math.max(0, total.value - (Number(pointUsed.value) || 0)))
+const pointEarned = computed(() => Math.floor(final.value / POINT_PER_WON))
 
 async function onFile(e: Event) {
   const t = e.target as HTMLInputElement
@@ -98,7 +99,7 @@ async function save() {
     await paymentsApi.update(payment.value.id, {
       items: items.value.map((x) => ({ ...x, item_name: x.item_name.trim() })),
       point_used: Number(pointUsed.value) || 0,
-      point_earned: Number(pointEarned.value) || 0,
+      point_earned: pointEarned.value,
       memo: memo.value,
     })
     toast.success('결제가 수정되었습니다.')
@@ -133,7 +134,12 @@ const staticBase = computed(() => {
       <AppCard title="포인트" padding="lg" style="margin-top: 16px">
         <div class="grid-2">
           <AppInput v-model="pointUsed" label="사용 포인트" inputmode="numeric" />
-          <AppInput v-model="pointEarned" label="적립 포인트" inputmode="numeric" />
+          <AppInput
+            :model-value="pointEarned.toLocaleString()"
+            label="적립 포인트"
+            readonly
+            hint="결제 금액 1,000원당 1P 자동 적립"
+          />
         </div>
         <div class="final">
           <span class="t-title-3">결제 금액</span>
