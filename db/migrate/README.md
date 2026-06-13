@@ -2,6 +2,22 @@
 
 레거시 MariaDB `mysqldump` 백업 → PostgreSQL `marigold` 스키마 임포트 스크립트 모음.
 
+## TL;DR — 새 backup.sql 받으면
+
+```bash
+cd db/migrate
+npm install                       # 최초 1회
+# 환경변수 (루트 .env 참고)
+export PGHOST=... PGPORT=... PGDATABASE=postgres PGUSER=postgres PGPASSWORD='...'
+
+# 한 줄: reset → 데이터 → 이미지 → admin 비번 'marigold'
+node import-all.cjs <backup.sql> ../../uploads marigold
+```
+
+로그인: `marigold / marigold`
+
+---
+
 ## 사전 준비
 
 1. PostgreSQL 접속 정보를 환경변수로 설정 (루트 `.env` 값과 동일)
