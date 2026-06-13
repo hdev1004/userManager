@@ -101,12 +101,14 @@ function fmtPhone(p: string | null) {
         type="button"
         @click="router.push(`/members/${m.id}`)"
       >
-        <div class="row__avatar"><User :size="20" /></div>
+        <div class="row__avatar"><User :size="26" /></div>
         <div class="row__main">
-          <div class="row__name">{{ m.name }}</div>
-          <div class="row__sub">
-            <Phone :size="14" />
-            <span class="num">{{ fmtPhone(m.phone) }}</span>
+          <div class="row__top">
+            <span class="row__name">{{ m.name }}</span>
+            <span class="row__phone num">
+              <Phone :size="16" />
+              <span>{{ fmtPhone(m.phone) }}</span>
+            </span>
           </div>
         </div>
         <div class="row__right">
@@ -173,9 +175,9 @@ function fmtPhone(p: string | null) {
 .row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   width: 100%;
-  padding: 16px 20px;
+  padding: 22px 24px;
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--color-line-soft);
@@ -190,8 +192,8 @@ function fmtPhone(p: string | null) {
   background: var(--color-bg-hover);
 }
 .row__avatar {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   color: var(--color-primary);
@@ -204,30 +206,53 @@ function fmtPhone(p: string | null) {
   flex: 1;
   min-width: 0;
 }
-.row__name {
-  font: var(--font-title-3);
-  color: var(--color-text-strong);
+.row__top {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.row__sub {
+.row__name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+}
+.row__phone {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-  font: var(--font-caption);
-  color: var(--color-text-tert);
+  gap: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-sub);
 }
 .row__right {
   text-align: right;
+  white-space: nowrap;
 }
 .row__point {
-  font: var(--font-body-3);
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: var(--color-primary);
 }
 .row__visit {
-  font: var(--font-caption);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--color-text-tert);
-  margin-top: 2px;
+  margin-top: 4px;
+}
+@media (max-width: 640px) {
+  .row__top {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  .row__name {
+    font-size: 20px;
+  }
+  .row__phone {
+    font-size: 16px;
+  }
 }
 .empty {
   background: #fff;

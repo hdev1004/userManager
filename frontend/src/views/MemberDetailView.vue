@@ -130,7 +130,7 @@ function fmtDate(s: string) {
 <template>
   <div class="page">
     <button class="back" type="button" @click="router.push('/')">
-      <ChevronLeft :size="18" />
+      <ChevronLeft :size="22" />
       <span>회원 검색으로</span>
     </button>
 
@@ -337,13 +337,14 @@ function fmtDate(s: string) {
 .back {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 36px;
-  padding: 0 12px;
-  font: var(--font-body-3);
+  gap: 6px;
+  height: 52px;
+  padding: 0 18px;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--color-text-sub);
-  border-radius: 10px;
-  margin-bottom: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 .back:hover {
   background: var(--color-bg-hover);

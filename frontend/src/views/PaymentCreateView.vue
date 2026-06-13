@@ -113,7 +113,7 @@ async function submit() {
 <template>
   <div class="page">
     <button class="back" type="button" @click="router.back()">
-      <ChevronLeft :size="18" />
+      <ChevronLeft :size="22" />
       <span>뒤로</span>
     </button>
 
@@ -255,13 +255,14 @@ async function submit() {
 .back {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 36px;
-  padding: 0 12px;
-  font: var(--font-body-3);
+  gap: 6px;
+  height: 52px;
+  padding: 0 18px;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--color-text-sub);
-  border-radius: 10px;
-  margin-bottom: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 .back:hover {
   background: var(--color-bg-hover);
