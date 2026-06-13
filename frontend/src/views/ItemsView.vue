@@ -234,13 +234,13 @@ async function onItemDragEnd() {
             class="itemrow"
           >
             <button class="grip" type="button" aria-label="드래그">
-              <GripVertical :size="16" />
+              <GripVertical :size="22" />
             </button>
             <div class="itemrow__code">{{ element.code }}</div>
             <div class="itemrow__name">{{ element.name }}</div>
             <div class="itemrow__price num">{{ element.price.toLocaleString() }}원</div>
             <button class="itemrow__del" type="button" @click="showConfirmDeleteItem = element">
-              <Trash2 :size="16" />
+              <Trash2 :size="20" />
             </button>
           </div>
         </template>
@@ -354,51 +354,68 @@ async function onItemDragEnd() {
 .itemlist {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 .itemrow {
   display: grid;
-  grid-template-columns: 28px 100px 1fr auto 32px;
+  grid-template-columns: 56px 110px 1fr auto 44px;
   align-items: center;
-  gap: 12px;
-  padding: 12px 12px 12px 8px;
+  gap: 16px;
+  padding: 6px 16px 6px 6px;
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
+  min-height: 68px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.itemrow:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 .grip {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: 56px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-tert);
   cursor: grab;
-  border-radius: 6px;
+  border-radius: 10px;
+  background: var(--color-line-soft);
   touch-action: none;
+  transition: all 120ms ease;
+}
+.grip:hover {
+  background: var(--color-line);
+  color: var(--color-text-sub);
 }
 .grip:active {
   cursor: grabbing;
-  background: var(--color-bg-hover);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 .itemrow__code {
-  font: var(--font-caption);
+  font: var(--font-body-3);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--color-text-tert);
   font-variant-numeric: tabular-nums;
 }
 .itemrow__name {
-  font: var(--font-body-3);
+  font-size: 17px;
+  font-weight: 700;
   color: var(--color-text-strong);
-  font-weight: 600;
 }
 .itemrow__price {
-  font: var(--font-body-3);
-  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
 }
 .itemrow__del {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   color: var(--color-text-tert);
   display: inline-flex;
   align-items: center;
