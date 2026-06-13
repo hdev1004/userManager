@@ -38,10 +38,10 @@ watch(
     try {
       const [m, p] = await Promise.all([
         membersApi.get(id),
-        membersApi.payments(id),
+        membersApi.payments(id, { limit: 5 }),
       ])
       member.value = m
-      payments.value = p.slice(0, 5)
+      payments.value = p.rows
     } catch (e) {
       toast.error(errorMessage(e))
       emit('close')

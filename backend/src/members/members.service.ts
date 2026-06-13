@@ -193,8 +193,21 @@ export class MembersService {
     return rows;
   }
 
-  async listPayments(id: number) {
+  async listPayments(
+    id: number,
+    offset = 0,
+    limit = 20,
+    filter: 'all' | 'point_used' | 'point_earned' = 'all',
+  ) {
     await this.getById(id);
+
+    let filterClause = '';
+    if (filter === 'point_used') filterClause = ' AND p.point_used > 0';
+    else if (filter === 'point_earned') filterClause = ' AND p.point_earned > 0';
+
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const safeOffset = Math.max(0, offset);
+
     const { rows } = await this.pool.query(
       `SELECT p.id, p.paid_at, p.total_amount, p.point_used, p.point_earned,
               p.final_amount, p.memo,
@@ -207,19 +220,28 @@ export class MembersService {
                   'amount', pi.amount
                 ) ORDER BY pi.id
               ) FILTER (WHERE pi.id IS NOT NULL), '[]'::json) AS items,
-              COALESCE(json_agg(DISTINCT jsonb_build_object(
-                'id', img.id, 'file_path', img.file_path
-              )) FILTER (WHERE img.id IS NOT NULL), '[]'::json) AS images
+              COALESCE((
+                SELECT json_agg(
+                  json_build_object('id', img.id, 'file_path', img.file_path)
+                  ORDER BY img.id
+                )
+                  FROM marigold.payment_images img
+                 WHERE img.payment_id = p.id
+              ), '[]'::json) AS images
          FROM marigold.payments p
     LEFT JOIN marigold.payment_items pi ON pi.payment_id = p.id
-    LEFT JOIN marigold.payment_images img ON img.payment_id = p.id
-        WHERE p.member_id = $1 AND p.deleted_at IS NULL
+        WHERE p.member_id = $1 AND p.deleted_at IS NULL${filterClause}
         GROUP BY p.id
         ORDER BY p.paid_at DESC, p.id DESC
-        LIMIT 100`,
-      [id],
+        LIMIT $2 OFFSET $3`,
+      [id, safeLimit + 1, safeOffset],
     );
-    return rows;
+
+    const hasMore = rows.length > safeLimit;
+    return {
+      rows: rows.slice(0, safeLimit),
+      has_more: hasMore,
+    };
   }
 
   private normalizePhone(phone?: string | null): string | null {

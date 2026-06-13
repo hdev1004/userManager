@@ -38,6 +38,13 @@ export interface PaymentSummary {
   images: Array<{ id: number; file_path: string }>
 }
 
+export type PaymentFilter = 'all' | 'point_used' | 'point_earned'
+
+export interface PaymentPage {
+  rows: PaymentSummary[]
+  has_more: boolean
+}
+
 export const membersApi = {
   search(q: string) {
     return api.get<MemberSummary[]>('/members', { params: { q } }).then((r) => r.data)
@@ -60,7 +67,12 @@ export const membersApi = {
   history(id: number) {
     return api.get<MemberHistory[]>(`/members/${id}/history`).then((r) => r.data)
   },
-  payments(id: number) {
-    return api.get<PaymentSummary[]>(`/members/${id}/payments`).then((r) => r.data)
+  payments(
+    id: number,
+    opts: { offset?: number; limit?: number; filter?: PaymentFilter } = {},
+  ) {
+    return api
+      .get<PaymentPage>(`/members/${id}/payments`, { params: opts })
+      .then((r) => r.data)
   },
 }

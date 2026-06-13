@@ -57,7 +57,16 @@ export class MembersController {
   }
 
   @Get(':id/payments')
-  payments(@Param('id', ParseIntPipe) id: number) {
-    return this.svc.listPayments(id);
+  payments(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('offset') offset?: string,
+    @Query('limit') limit?: string,
+    @Query('filter') filter?: string,
+  ) {
+    const off = Number(offset) || 0;
+    const lim = Number(limit) || 20;
+    const f =
+      filter === 'point_used' || filter === 'point_earned' ? filter : 'all';
+    return this.svc.listPayments(id, off, lim, f);
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ChevronLeft,
@@ -20,6 +20,7 @@ import {
   membersApi,
   type Member,
   type PaymentSummary,
+  type PaymentFilter,
 } from '@/api/members'
 import { errorMessage } from '@/api/client'
 import { useToast } from '@/composables/useToast'
@@ -28,29 +29,53 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const toast = useToast()
 
+const PAGE_SIZE = 20
+
 const member = ref<Member | null>(null)
 const payments = ref<PaymentSummary[]>([])
 const loading = ref(true)
+const loadingMore = ref(false)
+const hasMore = ref(false)
+const filter = ref<PaymentFilter>('all')
 const confirmDelete = ref(false)
 const deleting = ref(false)
 
-async function load() {
-  loading.value = true
+async function loadMember() {
   try {
-    const [m, p] = await Promise.all([
-      membersApi.get(Number(props.id)),
-      membersApi.payments(Number(props.id)),
-    ])
-    member.value = m
-    payments.value = p
+    member.value = await membersApi.get(Number(props.id))
+  } catch (e) {
+    toast.error(errorMessage(e))
+  }
+}
+
+async function loadPayments(reset = true) {
+  if (reset) {
+    loading.value = true
+  } else {
+    loadingMore.value = true
+  }
+  try {
+    const offset = reset ? 0 : payments.value.length
+    const res = await membersApi.payments(Number(props.id), {
+      offset,
+      limit: PAGE_SIZE,
+      filter: filter.value,
+    })
+    payments.value = reset ? res.rows : [...payments.value, ...res.rows]
+    hasMore.value = res.has_more
   } catch (e) {
     toast.error(errorMessage(e))
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
 
-onMounted(load)
+watch(filter, () => loadPayments(true))
+
+onMounted(async () => {
+  await Promise.all([loadMember(), loadPayments(true)])
+})
 
 async function doDelete() {
   if (!member.value) return
@@ -135,8 +160,48 @@ function fmtDate(s: string) {
         </div>
       </AppCard>
 
-      <AppCard title="결제 내역" padding="lg" style="margin-top: 24px">
-        <div v-if="payments.length === 0" class="t-body-2 text-tert">결제 내역이 없습니다.</div>
+      <AppCard padding="lg" style="margin-top: 24px">
+        <template #header>
+          <h3 class="paylist__title">결제 내역</h3>
+        </template>
+        <template #actions>
+          <div class="seg" role="tablist">
+            <button
+              type="button"
+              class="seg__btn"
+              :class="{ 'seg__btn--active': filter === 'all' }"
+              @click="filter = 'all'"
+            >
+              전체
+            </button>
+            <button
+              type="button"
+              class="seg__btn"
+              :class="{ 'seg__btn--active': filter === 'point_used' }"
+              @click="filter = 'point_used'"
+            >
+              <Coins :size="16" />
+              <span>포인트 사용</span>
+            </button>
+            <button
+              type="button"
+              class="seg__btn"
+              :class="{ 'seg__btn--active': filter === 'point_earned' }"
+              @click="filter = 'point_earned'"
+            >
+              <PlusCircle :size="16" />
+              <span>포인트 적립</span>
+            </button>
+          </div>
+        </template>
+
+        <div v-if="payments.length === 0" class="t-body-2 text-tert" style="text-align:center; padding: 32px">
+          {{
+            filter === 'point_used' ? '포인트를 사용한 결제가 없습니다.' :
+            filter === 'point_earned' ? '포인트가 적립된 결제가 없습니다.' :
+            '결제 내역이 없습니다.'
+          }}
+        </div>
         <div v-else class="paylist">
           <button
             v-for="p in payments"
@@ -165,20 +230,28 @@ function fmtDate(s: string) {
             </div>
             <div v-if="p.point_used > 0 || p.point_earned > 0 || p.images.length > 0 || p.memo" class="pay__foot">
               <span v-if="p.point_used > 0" class="chip chip--point-used">
-                <Coins :size="12" />
+                <Coins :size="16" />
                 포인트 사용 {{ p.point_used.toLocaleString() }}P
               </span>
               <span v-if="p.point_earned > 0" class="chip chip--success">
-                <PlusCircle :size="12" />
+                <PlusCircle :size="16" />
                 적립 {{ p.point_earned.toLocaleString() }}P
               </span>
               <span v-if="p.images.length > 0" class="chip">
-                <ImageIcon :size="12" />
-                {{ p.images.length }}
+                <ImageIcon :size="16" />
+                사진 {{ p.images.length }}장
               </span>
-              <span v-if="p.memo" class="chip chip--memo">메모</span>
+              <span v-if="p.memo" class="chip chip--memo">
+                <span>메모</span>
+              </span>
             </div>
           </button>
+        </div>
+
+        <div v-if="hasMore && payments.length > 0" class="more">
+          <AppButton variant="outline" size="large" :loading="loadingMore" block @click="loadPayments(false)">
+            더 보기
+          </AppButton>
         </div>
       </AppCard>
     </template>
@@ -273,16 +346,59 @@ function fmtDate(s: string) {
   }
 }
 
+.paylist__title {
+  margin: 0;
+  font: var(--font-title-2);
+  color: var(--color-text-strong);
+}
+
+.seg {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-pill);
+  gap: 2px;
+}
+.seg__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  font: var(--font-body-3);
+  font-size: 15px;
+  color: var(--color-text-sub);
+  background: transparent;
+  transition: all 120ms ease;
+}
+.seg__btn:hover {
+  color: var(--color-text-strong);
+}
+.seg__btn--active {
+  background: #fff;
+  color: var(--color-text-strong);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+@media (max-width: 640px) {
+  .seg__btn {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+
 .paylist {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .pay {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 20px 24px;
   border: 1px solid var(--color-line);
   border-radius: 14px;
   background: #fff;
@@ -302,8 +418,10 @@ function fmtDate(s: string) {
 .pay__date {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font: var(--font-body-3);
+  gap: 6px;
+  font: var(--font-body-2);
+  font-size: 16px;
+  font-weight: 600;
   color: var(--color-text-sub);
 }
 .pay__amount-wrap {
@@ -312,51 +430,59 @@ function fmtDate(s: string) {
   gap: 8px;
 }
 .pay__total-strike {
-  font: var(--font-caption);
+  font: var(--font-body-3);
   color: var(--color-text-tert);
   text-decoration: line-through;
 }
 .pay__amount {
-  font: var(--font-title-3);
+  font-size: 22px;
+  font-weight: 700;
   color: var(--color-text-strong);
 }
 .pay__items {
-  font: var(--font-body-3);
+  font: var(--font-body-2);
+  font-size: 16px;
   color: var(--color-text-sub);
+  line-height: 24px;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .pay__foot {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 8px 14px;
   border-radius: var(--radius-pill);
   background: var(--color-line-soft);
   color: var(--color-text-sub);
-  font: var(--font-tiny);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
 }
 .chip--success {
-  background: rgba(0, 200, 150, 0.12);
+  background: rgba(0, 200, 150, 0.14);
   color: var(--color-success);
-  font-weight: 600;
 }
 .chip--point-used {
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
-  font-size: 12px;
-  padding: 5px 12px;
+  font-size: 15px;
+  padding: 9px 16px;
 }
 .chip--memo {
   background: var(--color-line-soft);
   color: var(--color-text-sub);
+}
+
+.more {
+  margin-top: 16px;
 }
 </style>
