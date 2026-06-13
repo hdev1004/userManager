@@ -14,6 +14,7 @@ const query = ref('')
 const list = ref<MemberSummary[]>([])
 const loading = ref(false)
 const hasSearched = ref(false)
+const searchInputRef = ref<HTMLInputElement | null>(null)
 let timer: number | undefined
 
 async function search() {
@@ -32,6 +33,12 @@ async function search() {
   } finally {
     loading.value = false
   }
+}
+
+function onSubmit() {
+  if (timer) clearTimeout(timer)
+  searchInputRef.value?.blur() // iPad: 소프트 키보드 닫기
+  search()
 }
 
 watch(query, () => {
@@ -67,16 +74,20 @@ function fmtPhone(p: string | null) {
       </AppButton>
     </header>
 
-    <div class="search">
+    <form class="search" @submit.prevent="onSubmit">
       <div class="search__icon"><Search :size="18" /></div>
       <input
+        ref="searchInputRef"
         v-model="query"
         class="search__input"
+        type="search"
         placeholder="이름 (홍길동) 또는 전화번호 뒷 4자리 (1234)"
         inputmode="search"
+        enterkeyhint="search"
+        autocomplete="off"
         autofocus
       />
-    </div>
+    </form>
 
     <section v-if="loading" class="empty">
       <p class="t-body-2 text-tert">검색 중...</p>
