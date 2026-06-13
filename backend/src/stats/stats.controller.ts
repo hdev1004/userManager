@@ -18,8 +18,13 @@ export class StatsController {
   }
 
   @Get('sales')
-  sales(@Query('from') from?: string, @Query('to') to?: string) {
-    return this.svc.sales(from, to);
+  sales(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('group') group?: string,
+  ) {
+    const g = group === 'month' || group === 'year' ? group : 'day';
+    return this.svc.sales(from, to, g);
   }
 
   @Get('categories')

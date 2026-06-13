@@ -12,13 +12,15 @@ export interface RankingRow {
   visit_count: number
 }
 export interface SalesRow {
-  day: string
+  bucket: string
   count: number
   total: number
   final: number
   used: number
   earned: number
 }
+
+export type SalesGroup = 'day' | 'month' | 'year'
 export interface CategoryStatRow {
   id: number
   name: string
@@ -40,8 +42,10 @@ export const statsApi = {
   ranking(limit = 50) {
     return api.get<RankingRow[]>('/stats/ranking', { params: { limit } }).then((r) => r.data)
   },
-  sales(from?: string, to?: string) {
-    return api.get<SalesRow[]>('/stats/sales', { params: { from, to } }).then((r) => r.data)
+  sales(from?: string, to?: string, group: SalesGroup = 'day') {
+    return api
+      .get<SalesRow[]>('/stats/sales', { params: { from, to, group } })
+      .then((r) => r.data)
   },
   categories(from?: string, to?: string) {
     return api

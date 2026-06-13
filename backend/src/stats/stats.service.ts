@@ -18,21 +18,26 @@ export class StatsService {
     return rows;
   }
 
-  async sales(from: string | undefined, to: string | undefined) {
+  async sales(
+    from: string | undefined,
+    to: string | undefined,
+    group: 'day' | 'month' | 'year' = 'day',
+  ) {
+    const safeGroup = (['day', 'month', 'year'] as const).includes(group) ? group : 'day';
     const { rows } = await this.pool.query(
-      `SELECT date_trunc('day', paid_at)::date AS day,
-              COUNT(*)::int                    AS count,
-              SUM(total_amount)::int           AS total,
-              SUM(final_amount)::int           AS final,
-              SUM(point_used)::int             AS used,
-              SUM(point_earned)::int           AS earned
+      `SELECT date_trunc($3, paid_at)::date AS bucket,
+              COUNT(*)::int                  AS count,
+              SUM(total_amount)::int         AS total,
+              SUM(final_amount)::int         AS final,
+              SUM(point_used)::int           AS used,
+              SUM(point_earned)::int         AS earned
          FROM marigold.payments
         WHERE deleted_at IS NULL
           AND ($1::timestamptz IS NULL OR paid_at >= $1)
           AND ($2::timestamptz IS NULL OR paid_at <  $2)
-        GROUP BY day
-        ORDER BY day`,
-      [from ?? null, to ?? null],
+        GROUP BY bucket
+        ORDER BY bucket`,
+      [from ?? null, to ?? null, safeGroup],
     );
     return rows;
   }
