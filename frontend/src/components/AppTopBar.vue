@@ -157,4 +157,30 @@ async function logout() {
 .spacer {
   flex: 1;
 }
+
+/* 모바일: nav 텍스트 숨기고 아이콘만 / brand 살짝 작게 / padding 축소 */
+@media (max-width: 640px) {
+  .topbar__inner {
+    padding: 0 12px;
+    gap: var(--space-3);
+  }
+  .topbar__brand {
+    font-size: 17px;
+  }
+  .nav-item {
+    height: 40px;
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  .nav-item span {
+    display: none;
+  }
+  .topbar__user-name {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
 </style>

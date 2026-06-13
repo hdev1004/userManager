@@ -161,6 +161,23 @@ const transitionName = computed(() => (props.dim ? 'fade' : 'none'))
   display: flex;
   flex-direction: column;
 }
+@media (max-width: 640px) {
+  .modal {
+    padding: 12px;
+  }
+  .modal__box {
+    width: 100% !important;
+  }
+  .modal__head {
+    padding: 18px 20px 6px;
+  }
+  .modal__body {
+    padding: 12px 20px 18px;
+  }
+  .modal__foot {
+    padding: 14px 20px 18px;
+  }
+}
 .modal--no-dim .modal__box {
   /* 부유 팝업은 그림자를 좀 더 강하게 (배경이 옅어서 떠 있는 느낌) */
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);

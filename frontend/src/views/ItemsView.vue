@@ -58,7 +58,12 @@ async function loadAll() {
 }
 onMounted(loadAll)
 
+function dismissKeyboard() {
+  ;(document.activeElement as HTMLElement | null)?.blur()
+}
+
 async function createCategory() {
+  dismissKeyboard()
   if (!newCatCode.value || !newCatName.value) {
     toast.error('코드와 이름을 입력하세요.')
     return
@@ -93,6 +98,7 @@ async function deleteActiveCategory() {
 }
 
 async function createItem() {
+  dismissKeyboard()
   if (!activeCatId.value) return
   if (!newItemCode.value || !newItemName.value) {
     toast.error('코드와 품명을 입력하세요.')
@@ -255,8 +261,20 @@ async function onItemDragEnd() {
       @close="showAddCat = false"
     >
       <div class="vstack" style="gap:16px">
-        <AppInput v-model="newCatCode" label="코드" placeholder="예: SPA (영문 대문자 권장)" :maxlength="10" />
-        <AppInput v-model="newCatName" label="표시명" placeholder="예: 스파" :maxlength="30" />
+        <AppInput
+          v-model="newCatCode"
+          label="코드"
+          placeholder="예: SPA (영문 대문자 권장)"
+          :maxlength="10"
+          @enter="createCategory"
+        />
+        <AppInput
+          v-model="newCatName"
+          label="표시명"
+          placeholder="예: 스파"
+          :maxlength="30"
+          @enter="createCategory"
+        />
       </div>
       <template #footer>
         <AppButton variant="outline" size="medium" @click="showAddCat = false">취소</AppButton>
@@ -272,9 +290,27 @@ async function onItemDragEnd() {
       @close="showAddItem = false"
     >
       <div class="vstack" style="gap:16px">
-        <AppInput v-model="newItemCode" label="코드" placeholder="예: P30" :maxlength="20" />
-        <AppInput v-model="newItemName" label="품명" placeholder="예: 펌" :maxlength="50" />
-        <AppInput v-model="newItemPrice" label="단가" inputmode="numeric" placeholder="0" />
+        <AppInput
+          v-model="newItemCode"
+          label="코드"
+          placeholder="예: P30"
+          :maxlength="20"
+          @enter="createItem"
+        />
+        <AppInput
+          v-model="newItemName"
+          label="품명"
+          placeholder="예: 펌"
+          :maxlength="50"
+          @enter="createItem"
+        />
+        <AppInput
+          v-model="newItemPrice"
+          label="단가"
+          inputmode="numeric"
+          placeholder="0"
+          @enter="createItem"
+        />
       </div>
       <template #footer>
         <AppButton variant="outline" size="medium" @click="showAddItem = false">취소</AppButton>
