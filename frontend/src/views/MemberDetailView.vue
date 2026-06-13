@@ -252,7 +252,7 @@ function fmtDate(s: string) {
                 <span
                   v-if="p.point_used > 0"
                   class="pay__total-strike num"
-                >{{ (p.final_amount + p.point_used).toLocaleString() }}원</span>
+                >{{ p.total_amount.toLocaleString() }}원</span>
                 <span class="pay__amount num">{{ p.final_amount.toLocaleString() }}원</span>
               </div>
             </div>

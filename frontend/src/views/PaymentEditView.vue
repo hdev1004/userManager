@@ -28,7 +28,8 @@ const props = defineProps<{ id: string; pid: string }>()
 const router = useRouter()
 const toast = useToast()
 
-const POINT_PER_WON = 1000 // 1,000원당 1P 적립
+const POINT_PER_WON = 1000 // 적립: 1,000원당 1P
+const POINT_VALUE = 10 // 사용: 1P = 10원
 
 const payment = ref<Payment | null>(null)
 const items = ref<PaymentItemInput[]>([])
@@ -70,7 +71,8 @@ const total = computed(() =>
 const effectivePointUsed = computed(() =>
   paymentMethod.value === 'CARD' ? 0 : Number(pointUsed.value) || 0,
 )
-const final = computed(() => Math.max(0, total.value - effectivePointUsed.value))
+const pointDiscount = computed(() => effectivePointUsed.value * POINT_VALUE)
+const final = computed(() => Math.max(0, total.value - pointDiscount.value))
 const pointEarned = computed(() =>
   paymentMethod.value === 'CARD' ? 0 : Math.floor(final.value / POINT_PER_WON),
 )
@@ -182,7 +184,16 @@ const staticBase = computed(() => {
         style="margin-top: 16px"
       >
         <div class="grid-2">
-          <AppInput v-model="pointUsed" label="사용 포인트" inputmode="numeric" />
+          <AppInput
+            v-model="pointUsed"
+            label="사용 포인트"
+            inputmode="numeric"
+            :hint="
+              effectivePointUsed > 0
+                ? `${pointDiscount.toLocaleString()}원 할인 (1P = ${POINT_VALUE}원)`
+                : `1P = ${POINT_VALUE}원`
+            "
+          />
           <AppInput
             :model-value="pointEarned.toLocaleString()"
             label="적립 포인트"

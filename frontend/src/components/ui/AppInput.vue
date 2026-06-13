@@ -113,9 +113,11 @@ const value = computed({
   box-shadow: 0 0 0 3px rgba(240, 68, 82, 0.18);
 }
 .field__msg {
-  font: var(--font-caption);
-  color: var(--color-text-tert);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-sub);
   margin: 0;
+  line-height: 22px;
 }
 .field__msg--error {
   color: var(--color-danger);

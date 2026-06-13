@@ -15,6 +15,9 @@ import {
   UpdatePaymentDto,
 } from './dto/payment.dto';
 
+/** 1 포인트 = 10원 (사용 시 환산) */
+const POINT_VALUE = 10;
+
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -137,7 +140,7 @@ export class PaymentsService {
         totals.used = 0;
         totals.earned = 0;
       }
-      const finalAmt = Math.max(0, totals.total - totals.used);
+      const finalAmt = Math.max(0, totals.total - totals.used * POINT_VALUE);
 
       await client.query(
         `UPDATE marigold.payments SET
@@ -278,7 +281,8 @@ export class PaymentsService {
 
   private computeTotals(items: PaymentItemDto[], pointUsed: number) {
     const total = items.reduce((s, x) => s + x.unit_price * x.quantity, 0);
-    const final = Math.max(0, total - (pointUsed || 0));
+    const discount = (pointUsed || 0) * POINT_VALUE;
+    const final = Math.max(0, total - discount);
     return { total, final };
   }
 
