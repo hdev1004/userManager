@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { Trophy, TrendingUp, Tag, Package } from 'lucide-vue-next'
 import AppCard from '@/components/ui/AppCard.vue'
 import SalesChart from '@/components/SalesChart.vue'
+import MemberInfoModal from '@/components/MemberInfoModal.vue'
 import {
   statsApi,
   type Summary,
@@ -24,6 +25,13 @@ const topItems = ref<ItemStatRow[]>([])
 
 const group = ref<SalesGroup>('day')
 const loadingSales = ref(false)
+
+const selectedMemberId = ref<number | null>(null)
+const memberModalOpen = ref(false)
+function openMember(id: number) {
+  selectedMemberId.value = id
+  memberModalOpen.value = true
+}
 
 const totalInPeriod = computed(() =>
   sales.value.reduce((s, x) => s + x.final, 0),
@@ -185,7 +193,7 @@ onMounted(() => {
         <template #header>
           <h3 class="hdr"><Trophy :size="18" /> 회원 포인트 랭킹</h3>
         </template>
-        <table class="table">
+        <table class="table table--clickable">
           <thead>
             <tr>
               <th>#</th>
@@ -195,9 +203,9 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(r, i) in ranking" :key="r.id">
-              <td class="num">{{ i + 1 }}</td>
-              <td>{{ r.name }}</td>
+            <tr v-for="(r, i) in ranking" :key="r.id" @click="openMember(r.id)">
+              <td class="num rank__no" :class="{ 'rank__no--top': i < 3 }">{{ i + 1 }}</td>
+              <td class="rank__name">{{ r.name }}</td>
               <td class="num" style="text-align: right">{{ r.point.toLocaleString() }}P</td>
               <td class="num" style="text-align: right">{{ r.visit_count }}</td>
             </tr>
@@ -231,6 +239,7 @@ onMounted(() => {
         <template #header>
           <h3 class="hdr"><Package :size="18" /> 인기 품목 Top 10 (최근 1개월)</h3>
         </template>
+
         <table class="table">
           <thead>
             <tr>
@@ -249,6 +258,12 @@ onMounted(() => {
         </table>
       </AppCard>
     </div>
+
+    <MemberInfoModal
+      :open="memberModalOpen"
+      :member-id="selectedMemberId"
+      @close="memberModalOpen = false"
+    />
   </div>
 </template>
 
@@ -375,5 +390,32 @@ onMounted(() => {
   font: var(--font-caption);
   font-weight: 500;
   color: var(--color-text-tert);
+}
+.table--clickable tbody tr {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.table--clickable tbody tr:hover {
+  background: var(--color-bg-hover);
+}
+.table--clickable tbody tr:hover td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.table--clickable tbody tr:hover td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+.rank__no {
+  width: 28px;
+  color: var(--color-text-tert);
+}
+.rank__no--top {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.rank__name {
+  font-weight: 600;
+  color: var(--color-text-strong);
 }
 </style>
