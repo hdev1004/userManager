@@ -208,22 +208,16 @@ export class MembersService {
     id: number,
     offset = 0,
     limit = 20,
-    filter:
-      | 'all'
-      | 'point_used'
-      | 'point_earned'
-      | 'has_memo'
-      | 'has_image' = 'all',
+    filter: 'all' | 'point_used' | 'has_attachment' = 'all',
   ) {
     await this.getById(id);
 
     let filterClause = '';
     if (filter === 'point_used') filterClause = ' AND p.point_used > 0';
-    else if (filter === 'point_earned') filterClause = ' AND p.point_earned > 0';
-    else if (filter === 'has_memo') filterClause = " AND p.memo IS NOT NULL AND p.memo <> ''";
-    else if (filter === 'has_image')
+    else if (filter === 'has_attachment')
       filterClause =
-        ' AND EXISTS (SELECT 1 FROM marigold.payment_images img WHERE img.payment_id = p.id)';
+        " AND ((p.memo IS NOT NULL AND p.memo <> '')" +
+        ' OR EXISTS (SELECT 1 FROM marigold.payment_images img WHERE img.payment_id = p.id))';
 
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const safeOffset = Math.max(0, offset);

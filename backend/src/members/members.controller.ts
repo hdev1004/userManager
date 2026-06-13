@@ -65,12 +65,7 @@ export class MembersController {
   ) {
     const off = Number(offset) || 0;
     const lim = Number(limit) || 20;
-    const validFilters = [
-      'point_used',
-      'point_earned',
-      'has_memo',
-      'has_image',
-    ] as const;
+    const validFilters = ['point_used', 'has_attachment'] as const;
     const f = (validFilters as readonly string[]).includes(filter ?? '')
       ? (filter as (typeof validFilters)[number])
       : 'all';

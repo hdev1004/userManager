@@ -41,12 +41,7 @@ export interface PaymentSummary {
   images: Array<{ id: number; file_path: string }>
 }
 
-export type PaymentFilter =
-  | 'all'
-  | 'point_used'
-  | 'point_earned'
-  | 'has_memo'
-  | 'has_image'
+export type PaymentFilter = 'all' | 'point_used' | 'has_attachment'
 
 export interface PaymentPage {
   rows: PaymentSummary[]

@@ -13,6 +13,7 @@ import {
   Coins,
   PlusCircle,
   StickyNote,
+  Paperclip,
   Banknote,
   CreditCard,
   AlertTriangle,
@@ -218,29 +219,11 @@ function fmtDate(s: string) {
             <button
               type="button"
               class="seg__btn"
-              :class="{ 'seg__btn--active': filter === 'point_earned' }"
-              @click="filter = 'point_earned'"
+              :class="{ 'seg__btn--active': filter === 'has_attachment' }"
+              @click="filter = 'has_attachment'"
             >
-              <PlusCircle :size="16" />
-              <span>포인트 적립</span>
-            </button>
-            <button
-              type="button"
-              class="seg__btn"
-              :class="{ 'seg__btn--active': filter === 'has_memo' }"
-              @click="filter = 'has_memo'"
-            >
-              <StickyNote :size="16" />
-              <span>메모</span>
-            </button>
-            <button
-              type="button"
-              class="seg__btn"
-              :class="{ 'seg__btn--active': filter === 'has_image' }"
-              @click="filter = 'has_image'"
-            >
-              <ImageIcon :size="16" />
-              <span>사진</span>
+              <Paperclip :size="16" />
+              <span>메모&amp;사진</span>
             </button>
           </div>
         </template>
@@ -248,9 +231,7 @@ function fmtDate(s: string) {
         <div v-if="payments.length === 0" class="t-body-2 text-tert" style="text-align:center; padding: 32px">
           {{
             filter === 'point_used' ? '포인트를 사용한 결제가 없습니다.' :
-            filter === 'point_earned' ? '포인트가 적립된 결제가 없습니다.' :
-            filter === 'has_memo' ? '메모가 있는 결제가 없습니다.' :
-            filter === 'has_image' ? '사진이 있는 결제가 없습니다.' :
+            filter === 'has_attachment' ? '메모나 사진이 첨부된 결제가 없습니다.' :
             '결제 내역이 없습니다.'
           }}
         </div>
