@@ -12,6 +12,7 @@ import {
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppTextarea from '@/components/ui/AppTextarea.vue'
 import { membersApi, type Member } from '@/api/members'
 import { itemsApi, type Item } from '@/api/items'
 import { paymentsApi, type PaymentItemInput } from '@/api/payments'
@@ -243,7 +244,7 @@ async function submit() {
     </AppCard>
 
     <AppCard title="메모 및 이미지" padding="lg" style="margin-top: 16px">
-      <AppInput v-model="memo" label="메모" placeholder="시술 메모 (선택)" />
+      <AppTextarea v-model="memo" label="메모" :rows="5" placeholder="시술 메모 (선택) — 줄바꿈 가능" />
       <label class="file">
         <ImageIcon :size="18" />
         <span>{{ pendingImage ? pendingImage.name : '이미지 선택 (선택)' }}</span>

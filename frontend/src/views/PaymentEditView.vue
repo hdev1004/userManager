@@ -12,6 +12,8 @@ import {
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppTextarea from '@/components/ui/AppTextarea.vue'
+import AppImageViewer from '@/components/ui/AppImageViewer.vue'
 import { itemsApi, type Item } from '@/api/items'
 import { paymentsApi, type PaymentItemInput, type Payment } from '@/api/payments'
 import { errorMessage } from '@/api/client'
@@ -32,6 +34,13 @@ const uploading = ref(false)
 const searchQ = ref('')
 const searchResult = ref<Item[]>([])
 let searchTimer: number | undefined
+
+const viewerOpen = ref(false)
+const viewerIndex = ref(0)
+function openViewer(idx: number) {
+  viewerIndex.value = idx
+  viewerOpen.value = true
+}
 const draft = ref<{ item_id?: number; name: string; price: number; quantity: number }>({
   name: '',
   price: 0,
@@ -239,12 +248,22 @@ const staticBase = computed(() => {
       </AppCard>
 
       <AppCard title="메모 및 이미지" padding="lg" style="margin-top: 16px">
-        <AppInput v-model="memo" label="메모" />
+        <AppTextarea v-model="memo" label="메모" :rows="5" placeholder="줄바꿈도 그대로 저장됩니다." />
 
         <div class="gallery">
-          <div v-for="img in payment.images" :key="img.id" class="gallery__item">
+          <div
+            v-for="(img, idx) in payment.images"
+            :key="img.id"
+            class="gallery__item"
+            @click="openViewer(idx)"
+          >
             <img :src="`${staticBase}/${img.file_path}`" :alt="String(img.id)" />
-            <button class="gallery__del" type="button" @click="removeImage(img.id)" aria-label="삭제">
+            <button
+              class="gallery__del"
+              type="button"
+              aria-label="삭제"
+              @click.stop="removeImage(img.id)"
+            >
               <Trash2 :size="14" />
             </button>
           </div>
@@ -255,6 +274,13 @@ const staticBase = computed(() => {
           </label>
         </div>
       </AppCard>
+
+      <AppImageViewer
+        :open="viewerOpen"
+        :images="payment.images.map((i) => ({ id: i.id, src: `${staticBase}/${i.file_path}` }))"
+        v-model:index="viewerIndex"
+        @close="viewerOpen = false"
+      />
 
       <div class="bottom">
         <AppButton variant="outline" size="large" @click="router.back()">취소</AppButton>
@@ -437,11 +463,17 @@ const staticBase = computed(() => {
   border-radius: 14px;
   overflow: hidden;
   background: var(--color-line-soft);
+  cursor: zoom-in;
+  transition: transform 120ms ease;
+}
+.gallery__item:hover {
+  transform: scale(1.02);
 }
 .gallery__item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 .gallery__del {
   position: absolute;
