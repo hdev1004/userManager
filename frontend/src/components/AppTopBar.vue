@@ -1,0 +1,160 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { LogOut, KeyRound, ChevronDown, Search, Package, BarChart3 } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+const open = ref(false)
+
+const adminLabel = computed(() => auth.admin?.name || auth.admin?.loginId || '관리자')
+
+async function logout() {
+  await auth.logout()
+  router.replace('/login')
+}
+</script>
+
+<template>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <RouterLink to="/" class="topbar__brand">marigold</RouterLink>
+
+      <nav class="topbar__nav">
+        <RouterLink to="/" class="nav-item" exact-active-class="nav-item--active">
+          <Search :size="18" />
+          <span>회원 검색</span>
+        </RouterLink>
+        <RouterLink to="/items" class="nav-item" active-class="nav-item--active">
+          <Package :size="18" />
+          <span>물품 관리</span>
+        </RouterLink>
+        <RouterLink to="/stats" class="nav-item" active-class="nav-item--active">
+          <BarChart3 :size="18" />
+          <span>통계</span>
+        </RouterLink>
+      </nav>
+
+      <div class="spacer" />
+
+      <div class="topbar__user" tabindex="0" @click="open = !open" @blur="open = false">
+        <span class="topbar__user-name">{{ adminLabel }}</span>
+        <ChevronDown :size="16" />
+        <div v-show="open" class="menu">
+          <RouterLink to="/account/password" class="menu__item" @mousedown.prevent>
+            <KeyRound :size="16" />
+            <span>비밀번호 변경</span>
+          </RouterLink>
+          <button class="menu__item" @mousedown.prevent="logout">
+            <LogOut :size="16" />
+            <span>로그아웃</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+</template>
+
+<style scoped>
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--top-bar-h);
+  background: #fff;
+  border-bottom: 1px solid var(--color-line-soft);
+  z-index: 20;
+}
+.topbar__inner {
+  max-width: var(--page-max);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+.topbar__brand {
+  font: var(--font-title-2);
+  color: var(--color-text-strong);
+  letter-spacing: -0.02em;
+}
+.topbar__nav {
+  display: flex;
+  gap: 4px;
+}
+.nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font: var(--font-body-3);
+  color: var(--color-text-sub);
+  transition: all 120ms ease;
+}
+.nav-item:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-strong);
+}
+.nav-item--active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.topbar__user {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font: var(--font-body-3);
+  color: var(--color-text-strong);
+  outline: none;
+}
+.topbar__user:hover {
+  background: var(--color-bg-hover);
+}
+.topbar__user-name {
+  font-weight: 600;
+}
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.menu__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font: var(--font-body-3);
+  color: var(--color-text);
+  text-align: left;
+  width: 100%;
+  background: transparent;
+}
+.menu__item:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-strong);
+}
+.spacer {
+  flex: 1;
+}
+</style>

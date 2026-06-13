@@ -337,13 +337,153 @@
 
 ---
 
-## 7. UI/UX 요구사항
+## 7. UI/UX 디자인 시스템
 
-- **디자인 컨셉**:
-- **반응형**: (모바일/태블릿/PC)
-- **다국어**: (필요 여부)
-- **다크모드**: (필요 여부)
-- **참고 사이트**:
+> **컨셉**: 토스(Toss) 유사 — 넉넉한 여백 / 굵은 위계 / 큰 라운드 / 파란 강조색.
+> **이모지 사용 금지** — 모든 시각 기호는 `lucide-vue-next` 아이콘으로 통일.
+> **모든 컴포넌트는 본 섹션의 값(token)을 따른다.** CSS 변수로 정의하여 일관성 유지.
+
+### 7.1 폰트
+
+- **Family**: `Pretendard, -apple-system, system-ui, "Apple SD Gothic Neo", sans-serif`
+- **로드 방식**: CDN (`https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css`)
+- **숫자**: `font-variant-numeric: tabular-nums` (포인트/금액 표시)
+
+### 7.2 타이포그래피 토큰
+
+| 토큰        | size / weight / line-height | 용도                  |
+| ----------- | --------------------------- | --------------------- |
+| `display-1` | 32 / 700 / 40               | 페이지 메인 헤딩      |
+| `display-2` | 28 / 700 / 36               | 큰 숫자 (총액 등)     |
+| `title-1`   | 24 / 700 / 32               | 섹션 헤딩             |
+| `title-2`   | 20 / 700 / 28               | 카드/모달 타이틀      |
+| `title-3`   | 18 / 600 / 26               | 서브 헤딩             |
+| `body-1`    | 17 / 500 / 24               | 버튼 텍스트 (large)   |
+| `body-2`    | 15 / 400 / 22               | 본문 기본             |
+| `body-3`    | 14 / 500 / 20               | 인풋 텍스트, 라벨     |
+| `caption`   | 13 / 400 / 18               | 보조 설명, 메타 정보  |
+| `tiny`      | 11 / 500 / 14               | 태그, 뱃지            |
+
+### 7.3 컬러 토큰
+
+| 토큰                   | 값        | 용도                          |
+| ---------------------- | --------- | ----------------------------- |
+| `--color-primary`      | `#3182F6` | 주 강조색 (CTA, 활성 탭)      |
+| `--color-primary-hover`| `#1B64DA` | 호버                          |
+| `--color-primary-press`| `#1957C2` | 눌림                          |
+| `--color-primary-soft` | `#E8F2FE` | 약한 배경 (선택 강조)         |
+| `--color-text-strong`  | `#191F28` | 최강조 텍스트, 헤딩           |
+| `--color-text`         | `#333D4B` | 기본 본문                     |
+| `--color-text-sub`     | `#4E5968` | 보조 본문                     |
+| `--color-text-tert`    | `#8B95A1` | 캡션, 비활성                  |
+| `--color-text-disabled`| `#B0B8C1` | disabled                      |
+| `--color-line`         | `#E5E8EB` | 인풋 보더, 카드 보더          |
+| `--color-line-soft`    | `#F2F4F6` | 약한 구분선, 섹션 배경        |
+| `--color-bg`           | `#FFFFFF` | 페이지/카드 배경              |
+| `--color-bg-page`      | `#F9FAFB` | 전체 페이지 배경              |
+| `--color-bg-hover`     | `#F2F4F6` | 호버 배경                     |
+| `--color-success`      | `#00C896` | 성공/적립                     |
+| `--color-warning`      | `#FFC845` | 경고                          |
+| `--color-danger`       | `#F04452` | 위험/삭제                     |
+| `--color-danger-soft`  | `#FFE9EB` | 위험 약 배경                  |
+
+### 7.4 간격 토큰 (8pt grid)
+
+`--space-1`=4, `--space-2`=8, `--space-3`=12, `--space-4`=16, `--space-5`=20, `--space-6`=24, `--space-8`=32, `--space-10`=40, `--space-12`=48, `--space-16`=64, `--space-20`=80
+
+### 7.5 라운드 / 보더 / 그림자
+
+| 토큰              | 값                                |
+| ----------------- | --------------------------------- |
+| `--radius-sm`     | 6px                               |
+| `--radius-md`     | 10px                              |
+| `--radius-lg`     | 14px (버튼·인풋 기본)             |
+| `--radius-xl`     | 20px (카드·모달)                  |
+| `--radius-pill`   | 9999px                            |
+| `--border`        | `1px solid var(--color-line)`     |
+| `--shadow-sm`     | `0 1px 2px rgba(0,0,0,0.04)`      |
+| `--shadow-md`     | `0 4px 12px rgba(0,0,0,0.06)`     |
+| `--shadow-lg`     | `0 8px 24px rgba(0,0,0,0.10)`     |
+
+### 7.6 컴포넌트 규격
+
+#### 버튼
+
+| 사이즈   | height | font     | radius | h-padding | 용도              |
+| -------- | ------ | -------- | ------ | --------- | ----------------- |
+| `large`  | 56     | body-1   | 14     | 20        | 메인 CTA, 폼 제출 |
+| `medium` | 48     | body-3   | 12     | 16        | 일반 액션         |
+| `small`  | 36     | body-3   | 10     | 14        | 보조, 인라인      |
+
+| 변형          | bg                       | text                | border                  |
+| ------------- | ------------------------ | ------------------- | ----------------------- |
+| `primary`     | `--color-primary`        | white               | none                    |
+| `secondary`   | `--color-bg-hover`       | `--color-text`      | none                    |
+| `outline`     | white                    | `--color-text`      | `--border`              |
+| `ghost`       | transparent              | `--color-text`      | none                    |
+| `danger`      | `--color-danger`         | white               | none                    |
+| `danger-soft` | `--color-danger-soft`    | `--color-danger`    | none                    |
+
+전이: `transition: all 120ms ease`. 비활성: `opacity: 0.4; cursor: not-allowed`.
+
+#### 인풋 / 셀렉트
+
+- height **56**, radius **14**, font **body-3 (14)**, h-padding **16**
+- 기본 보더 `--color-line` 1px, 포커스 시 `--color-primary` 1.5px
+- 라벨: 인풋 위 `body-3` weight 500, `--color-text-sub`, 마진 bottom 8
+- 헬프 텍스트: 인풋 아래 `caption`, `--color-text-tert`
+- 에러 텍스트: `caption`, `--color-danger`
+
+#### 카드
+
+- bg white, radius **20**, padding **24**, border `--border` (또는 shadow-sm), gap 내부 16
+
+#### 모달 / 다이얼로그
+
+- radius **20**, padding **28**, shadow **lg**, 최대 폭 **480px**, dim `rgba(0,0,0,0.4)`
+
+#### 리스트 행 (검색 결과 등)
+
+- height **72**, padding h **20**, divider `1px solid --color-line-soft`
+- 호버 `--color-bg-hover`, 액티브 `--color-primary-soft`
+
+#### 탭
+
+- 라인 언더라인 스타일
+- 비활성 텍스트 `--color-text-tert`, 활성 `--color-text-strong` + 하단 2px `--color-primary`
+- 탭 row 패딩 h 16, 탭 높이 48
+
+#### 토스트
+
+- 화면 하단 24px, radius 14, padding 16 20, shadow-lg, bg `--color-text-strong`, text white
+
+### 7.7 레이아웃
+
+- **페이지 최대 너비**: 1024px (centered)
+- **페이지 좌우 패딩**: 24px (모바일 16px)
+- **섹션 간격**: 32px
+- **TopBar 높이**: 64px (좌우 padding 24, 로고/타이틀 좌측, 사용자 메뉴 우측)
+- **반응형 브레이크포인트**: `sm` 480, `md` 768, `lg` 1024
+
+### 7.8 아이콘
+
+- **라이브러리**: `lucide-vue-next`
+- **기본 크기**: 20px (`stroke-width: 2`)
+- **컨텍스트별**: 인라인(16) / 기본(20) / 강조(24)
+- 색상은 부모 텍스트 색을 따름 (`currentColor`)
+- **이모지/이모티콘 사용 금지** — 텍스트 안에서도 아이콘으로 대체
+
+### 7.9 인터랙션
+
+- 호버/포커스/액티브 모두 명확히 (transition 120ms)
+- 포커스 링: `box-shadow: 0 0 0 3px rgba(49,130,246,0.18)`
+- 드래그앤드롭(물품 정렬): `vuedraggable` + touch 지원 (iPad)
+
+### 7.10 구현 위치
+
+- 토큰 정의: `frontend/src/assets/tokens.css` (CSS 변수)
+- 글로벌 스타일: `frontend/src/assets/global.css` (reset + base)
+- 공용 컴포넌트: `frontend/src/components/ui/` (`AppButton`, `AppInput`, `AppCard`, `AppModal`, `AppTopBar`, `AppIcon` 등)
 
 ---
 

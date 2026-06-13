@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join, isAbsolute } from 'path';
 import { AppModule } from './app.module';
@@ -7,6 +8,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: false,
+    }),
+  );
 
   const corsOrigin = config.get<string>('CORS_ORIGIN');
   app.enableCors({
@@ -25,6 +34,6 @@ async function bootstrap() {
   const port = Number(config.get<string>('PORT')) || 3000;
   await app.listen(port);
   console.log(`Backend listening on http://localhost:${port}`);
-  console.log(`Static uploads served from: ${uploadAbs} → /static`);
+  console.log(`Static uploads served from: ${uploadAbs} -> /static`);
 }
-bootstrap();
+void bootstrap();
