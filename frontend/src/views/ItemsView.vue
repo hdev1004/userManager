@@ -324,24 +324,31 @@ async function onItemDragEnd() {
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 14px;
+  gap: 8px;
+  height: 52px;
+  padding: 0 22px;
   border-radius: var(--radius-pill);
-  background: var(--color-bg-hover);
+  background: #fff;
+  border: 2px solid var(--color-line);
   color: var(--color-text-sub);
-  font: var(--font-body-3);
+  font: var(--font-body-1);
+  font-size: 17px;
+  font-weight: 700;
   transition: all 120ms ease;
   cursor: pointer;
   touch-action: none;
   user-select: none;
 }
 .tab:hover {
-  background: var(--color-line);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 .tab--active {
   background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.25);
 }
 
 .itemlist {

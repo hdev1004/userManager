@@ -189,6 +189,8 @@ CREATE TABLE marigold.payments (
     point_used      INTEGER      NOT NULL DEFAULT 0 CHECK (point_used   >= 0),
     point_earned    INTEGER      NOT NULL DEFAULT 0 CHECK (point_earned >= 0),
     final_amount    INTEGER      NOT NULL DEFAULT 0 CHECK (final_amount >= 0),
+    payment_method  VARCHAR(10)  NOT NULL DEFAULT 'CASH'
+                                 CHECK (payment_method IN ('CASH', 'CARD')),
     memo            TEXT,
     legacy_pay_id   VARCHAR(35),                              -- 이관 추적용 (USE_INFO.pay_id)
     created_by      BIGINT       REFERENCES marigold.admins(id),

@@ -20,6 +20,8 @@ export interface MemberHistory {
   changed_by: string | null
   created_at: string
 }
+export type PaymentMethod = 'CASH' | 'CARD'
+
 export interface PaymentSummary {
   id: number
   paid_at: string
@@ -27,6 +29,7 @@ export interface PaymentSummary {
   point_used: number
   point_earned: number
   final_amount: number
+  payment_method: PaymentMethod
   memo: string | null
   items: Array<{
     id: number
@@ -38,7 +41,12 @@ export interface PaymentSummary {
   images: Array<{ id: number; file_path: string }>
 }
 
-export type PaymentFilter = 'all' | 'point_used' | 'point_earned'
+export type PaymentFilter =
+  | 'all'
+  | 'point_used'
+  | 'point_earned'
+  | 'has_memo'
+  | 'has_image'
 
 export interface PaymentPage {
   rows: PaymentSummary[]
@@ -73,6 +81,11 @@ export const membersApi = {
   ) {
     return api
       .get<PaymentPage>(`/members/${id}/payments`, { params: opts })
+      .then((r) => r.data)
+  },
+  deleteAllPayments(id: number) {
+    return api
+      .delete<{ ok: boolean; deleted: number }>(`/members/${id}/payments`)
       .then((r) => r.data)
   },
 }

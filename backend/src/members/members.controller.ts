@@ -65,8 +65,20 @@ export class MembersController {
   ) {
     const off = Number(offset) || 0;
     const lim = Number(limit) || 20;
-    const f =
-      filter === 'point_used' || filter === 'point_earned' ? filter : 'all';
+    const validFilters = [
+      'point_used',
+      'point_earned',
+      'has_memo',
+      'has_image',
+    ] as const;
+    const f = (validFilters as readonly string[]).includes(filter ?? '')
+      ? (filter as (typeof validFilters)[number])
+      : 'all';
     return this.svc.listPayments(id, off, lim, f);
+  }
+
+  @Delete(':id/payments')
+  deleteAllPayments(@Param('id', ParseIntPipe) id: number) {
+    return this.svc.deleteAllPayments(id);
   }
 }

@@ -28,6 +28,7 @@ export class PaymentsService {
     }
 
     const totals = this.computeTotals(dto.items, dto.point_used ?? 0);
+    const method = dto.payment_method ?? 'CASH';
 
     const client = await this.pool.connect();
     try {
@@ -44,7 +45,8 @@ export class PaymentsService {
       }
       const currentPoint = member.rows[0].point as number;
       const used = dto.point_used ?? 0;
-      const earned = dto.point_earned ?? 0;
+      // 카드 결제 시 포인트 적립 금지 (요청된 값과 무관하게 0)
+      const earned = method === 'CARD' ? 0 : (dto.point_earned ?? 0);
 
       if (used > currentPoint) {
         throw new BadRequestException(
@@ -55,16 +57,17 @@ export class PaymentsService {
       const payRes = await client.query(
         `INSERT INTO marigold.payments
            (member_id, total_amount, point_used, point_earned,
-            final_amount, memo, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+            final_amount, payment_method, memo, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id, paid_at, total_amount, point_used,
-                   point_earned, final_amount, memo, created_at`,
+                   point_earned, final_amount, payment_method, memo, created_at`,
         [
           dto.member_id,
           totals.total,
           used,
           earned,
           totals.final,
+          method,
           dto.memo ?? null,
           adminId,
         ],
@@ -97,7 +100,7 @@ export class PaymentsService {
       await client.query('BEGIN');
 
       const cur = await client.query(
-        `SELECT id, member_id, total_amount, point_used, point_earned
+        `SELECT id, member_id, total_amount, point_used, point_earned, payment_method
            FROM marigold.payments
           WHERE id = $1 AND deleted_at IS NULL
           FOR UPDATE`,
@@ -108,7 +111,11 @@ export class PaymentsService {
       }
       const before = cur.rows[0];
 
-      let totals = {
+      const method = (dto.payment_method ?? before.payment_method) as
+        | 'CASH'
+        | 'CARD';
+
+      const totals = {
         total: before.total_amount as number,
         used: before.point_used as number,
         earned: before.point_earned as number,
@@ -125,15 +132,18 @@ export class PaymentsService {
       }
       if (dto.point_used !== undefined) totals.used = dto.point_used;
       if (dto.point_earned !== undefined) totals.earned = dto.point_earned;
+      // 카드 결제일 때는 적립 0 강제
+      if (method === 'CARD') totals.earned = 0;
       const finalAmt = Math.max(0, totals.total - totals.used);
 
       await client.query(
         `UPDATE marigold.payments SET
-            total_amount = $2,
-            point_used   = $3,
-            point_earned = $4,
-            final_amount = $5,
-            memo         = COALESCE($6, memo)
+            total_amount   = $2,
+            point_used     = $3,
+            point_earned   = $4,
+            final_amount   = $5,
+            payment_method = $6,
+            memo           = COALESCE($7, memo)
           WHERE id = $1`,
         [
           id,
@@ -141,6 +151,7 @@ export class PaymentsService {
           totals.used,
           totals.earned,
           finalAmt,
+          method,
           dto.memo ?? null,
         ],
       );
@@ -169,7 +180,7 @@ export class PaymentsService {
   async getById(id: number) {
     const { rows } = await this.pool.query(
       `SELECT p.id, p.member_id, p.paid_at, p.total_amount, p.point_used,
-              p.point_earned, p.final_amount, p.memo,
+              p.point_earned, p.final_amount, p.payment_method, p.memo,
               m.name AS member_name, m.phone AS member_phone,
               COALESCE(json_agg(
                 json_build_object(

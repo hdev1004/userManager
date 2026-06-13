@@ -1,6 +1,7 @@
 import {
   ArrayMinSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -9,6 +10,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export type PaymentMethod = 'CASH' | 'CARD';
 
 export class PaymentItemDto {
   @IsOptional()
@@ -49,6 +52,10 @@ export class CreatePaymentDto {
   point_earned?: number;
 
   @IsOptional()
+  @IsIn(['CASH', 'CARD'])
+  payment_method?: PaymentMethod;
+
+  @IsOptional()
   @IsString()
   memo?: string;
 }
@@ -70,6 +77,10 @@ export class UpdatePaymentDto {
   @IsInt()
   @Min(0)
   point_earned?: number;
+
+  @IsOptional()
+  @IsIn(['CASH', 'CARD'])
+  payment_method?: PaymentMethod;
 
   @IsOptional()
   @IsString()

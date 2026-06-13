@@ -83,7 +83,7 @@ function goDetail() {
         <div class="head__main">
           <div class="head__name">{{ member.name }}</div>
           <div class="head__phone">
-            <Phone :size="13" />
+            <Phone :size="16" />
             <span class="num">{{ fmtPhone(member.phone) }}</span>
           </div>
         </div>
@@ -187,10 +187,12 @@ function goDetail() {
 .head__phone {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-  font: var(--font-caption);
-  color: var(--color-text-tert);
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
 }
 
 .stats {

@@ -12,6 +12,10 @@ import {
   Calendar,
   Coins,
   PlusCircle,
+  StickyNote,
+  Banknote,
+  CreditCard,
+  AlertTriangle,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -39,6 +43,8 @@ const hasMore = ref(false)
 const filter = ref<PaymentFilter>('all')
 const confirmDelete = ref(false)
 const deleting = ref(false)
+const confirmDeleteAll = ref(false)
+const deletingAll = ref(false)
 
 async function loadMember() {
   try {
@@ -89,6 +95,21 @@ async function doDelete() {
   } finally {
     deleting.value = false
     confirmDelete.value = false
+  }
+}
+
+async function doDeleteAllPayments() {
+  if (!member.value) return
+  deletingAll.value = true
+  try {
+    const res = await membersApi.deleteAllPayments(member.value.id)
+    toast.success(`결제 내역 ${res.deleted}건을 삭제했습니다.`)
+    confirmDeleteAll.value = false
+    await loadPayments(true)
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    deletingAll.value = false
   }
 }
 
@@ -162,7 +183,18 @@ function fmtDate(s: string) {
 
       <AppCard padding="lg" style="margin-top: 24px">
         <template #header>
-          <h3 class="paylist__title">결제 내역</h3>
+          <div class="paylist__head-l">
+            <h3 class="paylist__title">결제 내역</h3>
+            <button
+              v-if="payments.length > 0 || filter !== 'all'"
+              type="button"
+              class="paylist__danger-btn"
+              @click="confirmDeleteAll = true"
+            >
+              <Trash2 :size="14" />
+              <span>전체 삭제</span>
+            </button>
+          </div>
         </template>
         <template #actions>
           <div class="seg" role="tablist">
@@ -192,6 +224,24 @@ function fmtDate(s: string) {
               <PlusCircle :size="16" />
               <span>포인트 적립</span>
             </button>
+            <button
+              type="button"
+              class="seg__btn"
+              :class="{ 'seg__btn--active': filter === 'has_memo' }"
+              @click="filter = 'has_memo'"
+            >
+              <StickyNote :size="16" />
+              <span>메모</span>
+            </button>
+            <button
+              type="button"
+              class="seg__btn"
+              :class="{ 'seg__btn--active': filter === 'has_image' }"
+              @click="filter = 'has_image'"
+            >
+              <ImageIcon :size="16" />
+              <span>사진</span>
+            </button>
           </div>
         </template>
 
@@ -199,6 +249,8 @@ function fmtDate(s: string) {
           {{
             filter === 'point_used' ? '포인트를 사용한 결제가 없습니다.' :
             filter === 'point_earned' ? '포인트가 적립된 결제가 없습니다.' :
+            filter === 'has_memo' ? '메모가 있는 결제가 없습니다.' :
+            filter === 'has_image' ? '사진이 있는 결제가 없습니다.' :
             '결제 내역이 없습니다.'
           }}
         </div>
@@ -228,7 +280,12 @@ function fmtDate(s: string) {
                 {{ it.item_name }} x {{ it.quantity }}<span v-if="idx < p.items.length - 1">, </span>
               </span>
             </div>
-            <div v-if="p.point_used > 0 || p.point_earned > 0 || p.images.length > 0 || p.memo" class="pay__foot">
+            <div class="pay__foot">
+              <span class="chip chip--method">
+                <Banknote v-if="p.payment_method === 'CASH'" :size="16" />
+                <CreditCard v-else :size="16" />
+                {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
+              </span>
               <span v-if="p.point_used > 0" class="chip chip--point-used">
                 <Coins :size="16" />
                 포인트 사용 {{ p.point_used.toLocaleString() }}P
@@ -237,12 +294,13 @@ function fmtDate(s: string) {
                 <PlusCircle :size="16" />
                 적립 {{ p.point_earned.toLocaleString() }}P
               </span>
-              <span v-if="p.images.length > 0" class="chip">
+              <span v-if="p.images.length > 0" class="chip chip--image">
                 <ImageIcon :size="16" />
                 사진 {{ p.images.length }}장
               </span>
               <span v-if="p.memo" class="chip chip--memo">
-                <span>메모</span>
+                <StickyNote :size="16" />
+                메모
               </span>
             </div>
           </button>
@@ -264,6 +322,31 @@ function fmtDate(s: string) {
       <template #footer>
         <AppButton variant="outline" size="medium" @click="confirmDelete = false">취소</AppButton>
         <AppButton variant="danger" size="medium" :loading="deleting" @click="doDelete">삭제</AppButton>
+      </template>
+    </AppModal>
+
+    <AppModal
+      :open="confirmDeleteAll"
+      title="결제 내역 전체 삭제"
+      @close="confirmDeleteAll = false"
+    >
+      <div class="warn">
+        <AlertTriangle :size="20" />
+        <div>
+          <p style="margin: 0 0 6px; font-weight: 700; color: var(--color-text-strong)">
+            <strong>{{ member?.name }}</strong> 회원의 결제 내역을 모두 삭제할까요?
+          </p>
+          <p class="t-caption" style="margin: 0; color: var(--color-text-tert)">
+            보유 포인트와 방문 횟수는 그대로 유지됩니다.<br />
+            이 작업은 되돌릴 수 없습니다.
+          </p>
+        </div>
+      </div>
+      <template #footer>
+        <AppButton variant="outline" size="medium" @click="confirmDeleteAll = false">취소</AppButton>
+        <AppButton variant="danger" size="medium" :loading="deletingAll" @click="doDeleteAllPayments">
+          전체 삭제
+        </AppButton>
       </template>
     </AppModal>
   </div>
@@ -346,10 +429,40 @@ function fmtDate(s: string) {
   }
 }
 
+.paylist__head-l {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
 .paylist__title {
   margin: 0;
   font: var(--font-title-2);
   color: var(--color-text-strong);
+}
+.paylist__danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font: var(--font-caption);
+  font-weight: 700;
+  transition: all 120ms ease;
+}
+.paylist__danger-btn:hover {
+  background: #ffd8dc;
+}
+
+.warn {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-radius: 12px;
 }
 
 .seg {
@@ -463,23 +576,33 @@ function fmtDate(s: string) {
   background: var(--color-line-soft);
   color: var(--color-text-sub);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
 }
 .chip--success {
-  background: rgba(0, 200, 150, 0.14);
-  color: var(--color-success);
+  background: rgba(0, 200, 150, 0.18);
+  color: #00855e;
 }
 .chip--point-used {
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  font-weight: 700;
   font-size: 15px;
   padding: 9px 16px;
 }
+/* 사진 — 진한 오렌지 */
+.chip--image {
+  background: #ffedd5;
+  color: #c2410c;
+}
+/* 메모 — 진한 보라 */
 .chip--memo {
-  background: var(--color-line-soft);
-  color: var(--color-text-sub);
+  background: #ede9fe;
+  color: #6d28d9;
+}
+/* 결제 수단 — 다크 그레이 */
+.chip--method {
+  background: #1f2937;
+  color: #fff;
 }
 
 .more {

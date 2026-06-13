@@ -1,5 +1,7 @@
 import { api } from './client'
 
+export type PaymentMethod = 'CASH' | 'CARD'
+
 export interface PaymentItemInput {
   item_id?: number | null
   item_name: string
@@ -15,6 +17,7 @@ export interface Payment {
   point_used: number
   point_earned: number
   final_amount: number
+  payment_method: PaymentMethod
   memo: string | null
   member_name?: string
   member_phone?: string | null
@@ -35,6 +38,7 @@ export const paymentsApi = {
     items: PaymentItemInput[]
     point_used?: number
     point_earned?: number
+    payment_method?: PaymentMethod
     memo?: string
   }) {
     return api.post<Payment>('/payments', body).then((r) => r.data)
@@ -48,6 +52,7 @@ export const paymentsApi = {
       items?: PaymentItemInput[]
       point_used?: number
       point_earned?: number
+      payment_method?: PaymentMethod
       memo?: string
     },
   ) {

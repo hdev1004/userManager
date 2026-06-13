@@ -6,6 +6,8 @@ import {
   Trash2,
   Image as ImageIcon,
   Save,
+  Banknote,
+  CreditCard,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -13,7 +15,12 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 import AppImageViewer from '@/components/ui/AppImageViewer.vue'
 import PaymentItemsEditor from '@/components/PaymentItemsEditor.vue'
-import { paymentsApi, type PaymentItemInput, type Payment } from '@/api/payments'
+import {
+  paymentsApi,
+  type PaymentItemInput,
+  type Payment,
+  type PaymentMethod,
+} from '@/api/payments'
 import { errorMessage } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 
@@ -27,6 +34,7 @@ const payment = ref<Payment | null>(null)
 const items = ref<PaymentItemInput[]>([])
 const memo = ref('')
 const pointUsed = ref('0')
+const paymentMethod = ref<PaymentMethod>('CASH')
 const saving = ref(false)
 const uploading = ref(false)
 
@@ -49,6 +57,7 @@ async function load() {
     }))
     memo.value = p.memo ?? ''
     pointUsed.value = String(p.point_used)
+    paymentMethod.value = p.payment_method ?? 'CASH'
   } catch (e) {
     toast.error(errorMessage(e))
   }
@@ -59,7 +68,9 @@ const total = computed(() =>
   items.value.reduce((s, x) => s + x.unit_price * x.quantity, 0),
 )
 const final = computed(() => Math.max(0, total.value - (Number(pointUsed.value) || 0)))
-const pointEarned = computed(() => Math.floor(final.value / POINT_PER_WON))
+const pointEarned = computed(() =>
+  paymentMethod.value === 'CARD' ? 0 : Math.floor(final.value / POINT_PER_WON),
+)
 
 async function onFile(e: Event) {
   const t = e.target as HTMLInputElement
@@ -100,6 +111,7 @@ async function save() {
       items: items.value.map((x) => ({ ...x, item_name: x.item_name.trim() })),
       point_used: Number(pointUsed.value) || 0,
       point_earned: pointEarned.value,
+      payment_method: paymentMethod.value,
       memo: memo.value,
     })
     toast.success('결제가 수정되었습니다.')
@@ -131,6 +143,31 @@ const staticBase = computed(() => {
         <PaymentItemsEditor v-model="items" />
       </AppCard>
 
+      <AppCard title="결제 수단" padding="lg" style="margin-top: 16px">
+        <div class="method">
+          <button
+            type="button"
+            class="method__btn"
+            :class="{ 'method__btn--active': paymentMethod === 'CASH' }"
+            @click="paymentMethod = 'CASH'"
+          >
+            <Banknote :size="22" />
+            <span class="method__label">현금</span>
+            <span class="method__hint">포인트 적립</span>
+          </button>
+          <button
+            type="button"
+            class="method__btn"
+            :class="{ 'method__btn--active': paymentMethod === 'CARD' }"
+            @click="paymentMethod = 'CARD'"
+          >
+            <CreditCard :size="22" />
+            <span class="method__label">카드</span>
+            <span class="method__hint">적립 없음</span>
+          </button>
+        </div>
+      </AppCard>
+
       <AppCard title="포인트" padding="lg" style="margin-top: 16px">
         <div class="grid-2">
           <AppInput v-model="pointUsed" label="사용 포인트" inputmode="numeric" />
@@ -138,7 +175,7 @@ const staticBase = computed(() => {
             :model-value="pointEarned.toLocaleString()"
             label="적립 포인트"
             readonly
-            hint="결제 금액 1,000원당 1P 자동 적립"
+            :hint="paymentMethod === 'CARD' ? '카드 결제는 적립되지 않습니다' : '결제 금액 1,000원당 1P 자동 적립'"
           />
         </div>
         <div class="final">
@@ -210,6 +247,48 @@ const staticBase = computed(() => {
 .back:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-strong);
+}
+
+.method {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.method__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 96px;
+  padding: 12px;
+  background: #fff;
+  border: 2px solid var(--color-line);
+  border-radius: 14px;
+  color: var(--color-text-sub);
+  transition: all 120ms ease;
+}
+.method__btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text-strong);
+}
+.method__btn--active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.method__label {
+  font: var(--font-body-2);
+  font-size: 17px;
+  font-weight: 700;
+}
+.method__hint {
+  font: var(--font-caption);
+  color: var(--color-text-tert);
+}
+.method__btn--active .method__hint {
+  color: var(--color-primary);
+  opacity: 0.85;
 }
 
 .grid-2 {

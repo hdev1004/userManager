@@ -178,6 +178,17 @@ export class MembersService {
     return { ok: true };
   }
 
+  async deleteAllPayments(id: number) {
+    await this.getById(id);
+    const { rowCount } = await this.pool.query(
+      `UPDATE marigold.payments
+          SET deleted_at = NOW()
+        WHERE member_id = $1 AND deleted_at IS NULL`,
+      [id],
+    );
+    return { ok: true, deleted: rowCount ?? 0 };
+  }
+
   async getHistory(id: number) {
     await this.getById(id);
     const { rows } = await this.pool.query(
@@ -197,20 +208,29 @@ export class MembersService {
     id: number,
     offset = 0,
     limit = 20,
-    filter: 'all' | 'point_used' | 'point_earned' = 'all',
+    filter:
+      | 'all'
+      | 'point_used'
+      | 'point_earned'
+      | 'has_memo'
+      | 'has_image' = 'all',
   ) {
     await this.getById(id);
 
     let filterClause = '';
     if (filter === 'point_used') filterClause = ' AND p.point_used > 0';
     else if (filter === 'point_earned') filterClause = ' AND p.point_earned > 0';
+    else if (filter === 'has_memo') filterClause = " AND p.memo IS NOT NULL AND p.memo <> ''";
+    else if (filter === 'has_image')
+      filterClause =
+        ' AND EXISTS (SELECT 1 FROM marigold.payment_images img WHERE img.payment_id = p.id)';
 
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const safeOffset = Math.max(0, offset);
 
     const { rows } = await this.pool.query(
       `SELECT p.id, p.paid_at, p.total_amount, p.point_used, p.point_earned,
-              p.final_amount, p.memo,
+              p.final_amount, p.payment_method, p.memo,
               COALESCE(json_agg(
                 json_build_object(
                   'id', pi.id,
