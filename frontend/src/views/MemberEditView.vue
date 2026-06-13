@@ -8,6 +8,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import { membersApi, type Member, type MemberHistory } from '@/api/members'
 import { errorMessage } from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import { formatKoreanPhoneTyping, stripPhone } from '@/utils/phone'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -31,7 +32,7 @@ async function load() {
     ])
     original.value = m
     name.value = m.name
-    phone.value = m.phone ?? ''
+    phone.value = formatKoreanPhoneTyping(m.phone ?? '')
     point.value = String(m.point)
     memo.value = m.memo ?? ''
     history.value = h
@@ -50,7 +51,7 @@ async function save() {
   try {
     const body: Record<string, unknown> = {}
     if (name.value.trim() !== original.value.name) body.name = name.value.trim()
-    const phoneClean = phone.value.replace(/[^0-9]/g, '')
+    const phoneClean = stripPhone(phone.value)
     if ((phoneClean || '') !== (original.value.phone ?? '')) body.phone = phoneClean
     if (Number(point.value) !== original.value.point) body.point = Number(point.value)
     if ((memo.value || '') !== (original.value.memo ?? '')) body.memo = memo.value
@@ -95,7 +96,14 @@ function fmtTs(s: string) {
       <AppCard padding="lg">
         <form class="form" @submit.prevent="save">
           <AppInput v-model="name" label="성명" :maxlength="50" />
-          <AppInput v-model="phone" label="전화번호" inputmode="tel" :maxlength="20" />
+          <AppInput
+            :model-value="phone"
+            label="전화번호"
+            inputmode="numeric"
+            placeholder="010-1234-5678"
+            :maxlength="13"
+            @update:modelValue="(v) => (phone = formatKoreanPhoneTyping(v))"
+          />
           <AppInput v-model="point" label="포인트" inputmode="numeric" />
           <AppInput v-model="memo" label="메모" />
 

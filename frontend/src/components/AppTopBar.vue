@@ -77,24 +77,30 @@ async function logout() {
   gap: var(--space-6);
 }
 .topbar__brand {
-  font: var(--font-title-2);
+  font-size: 26px;
+  font-weight: 800;
   color: var(--color-text-strong);
   letter-spacing: -0.02em;
 }
 .topbar__nav {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 .nav-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 10px;
-  font: var(--font-body-3);
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--color-text-sub);
   transition: all 120ms ease;
+}
+.nav-item :deep(svg) {
+  width: 22px;
+  height: 22px;
 }
 .nav-item:hover {
   background: var(--color-bg-hover);
@@ -103,26 +109,31 @@ async function logout() {
 .nav-item--active {
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .topbar__user {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 10px;
+  gap: 8px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
   cursor: pointer;
-  font: var(--font-body-3);
+  font-size: 16px;
   color: var(--color-text-strong);
   outline: none;
+}
+.topbar__user :deep(svg) {
+  width: 18px;
+  height: 18px;
 }
 .topbar__user:hover {
   background: var(--color-bg-hover);
 }
 .topbar__user-name {
-  font-weight: 600;
+  font-weight: 700;
 }
 .menu {
   position: absolute;
@@ -132,8 +143,8 @@ async function logout() {
   border: var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow-md);
-  min-width: 180px;
-  padding: 6px;
+  min-width: 220px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -141,14 +152,19 @@ async function logout() {
 .menu__item {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 12px 14px;
   border-radius: 10px;
-  font: var(--font-body-3);
+  font-size: 16px;
+  font-weight: 600;
   color: var(--color-text);
   text-align: left;
   width: 100%;
   background: transparent;
+}
+.menu__item :deep(svg) {
+  width: 18px;
+  height: 18px;
 }
 .menu__item:hover {
   background: var(--color-bg-hover);

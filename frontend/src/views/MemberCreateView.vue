@@ -8,6 +8,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import { membersApi } from '@/api/members'
 import { errorMessage } from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import { formatKoreanPhoneTyping, stripPhone } from '@/utils/phone'
 
 const router = useRouter()
 const toast = useToast()
@@ -29,7 +30,7 @@ async function submit() {
   try {
     const created = await membersApi.create({
       name: name.value.trim(),
-      phone: phone.value.replace(/[^0-9]/g, '') || undefined,
+      phone: stripPhone(phone.value) || undefined,
       point: point.value ? Number(point.value) : 0,
       memo: memo.value.trim() || undefined,
     })
@@ -63,12 +64,13 @@ async function submit() {
           :maxlength="50"
         />
         <AppInput
-          v-model="phone"
+          :model-value="phone"
           label="전화번호"
-          inputmode="tel"
-          placeholder="01012345678"
-          hint="숫자만 입력. 빈 값 가능."
-          :maxlength="20"
+          inputmode="numeric"
+          placeholder="010-1234-5678"
+          hint="숫자만 입력하면 자동으로 - 가 들어갑니다."
+          :maxlength="13"
+          @update:modelValue="(v) => (phone = formatKoreanPhoneTyping(v))"
         />
         <AppInput
           v-model="point"
