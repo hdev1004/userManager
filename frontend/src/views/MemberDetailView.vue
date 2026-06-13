@@ -10,6 +10,8 @@ import {
   User,
   Image as ImageIcon,
   Calendar,
+  Coins,
+  PlusCircle,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -148,7 +150,13 @@ function fmtDate(s: string) {
                 <Calendar :size="14" />
                 <span>{{ fmtDate(p.paid_at) }}</span>
               </div>
-              <div class="pay__amount num">{{ p.final_amount.toLocaleString() }}원</div>
+              <div class="pay__amount-wrap">
+                <span
+                  v-if="p.point_used > 0"
+                  class="pay__total-strike num"
+                >{{ (p.final_amount + p.point_used).toLocaleString() }}원</span>
+                <span class="pay__amount num">{{ p.final_amount.toLocaleString() }}원</span>
+              </div>
             </div>
             <div class="pay__items">
               <span v-for="(it, idx) in p.items" :key="it.id">
@@ -156,8 +164,14 @@ function fmtDate(s: string) {
               </span>
             </div>
             <div v-if="p.point_used > 0 || p.point_earned > 0 || p.images.length > 0 || p.memo" class="pay__foot">
-              <span v-if="p.point_used > 0" class="chip">포인트 사용 {{ p.point_used.toLocaleString() }}P</span>
-              <span v-if="p.point_earned > 0" class="chip chip--success">적립 {{ p.point_earned.toLocaleString() }}P</span>
+              <span v-if="p.point_used > 0" class="chip chip--point-used">
+                <Coins :size="12" />
+                포인트 사용 {{ p.point_used.toLocaleString() }}P
+              </span>
+              <span v-if="p.point_earned > 0" class="chip chip--success">
+                <PlusCircle :size="12" />
+                적립 {{ p.point_earned.toLocaleString() }}P
+              </span>
               <span v-if="p.images.length > 0" class="chip">
                 <ImageIcon :size="12" />
                 {{ p.images.length }}
@@ -292,6 +306,16 @@ function fmtDate(s: string) {
   font: var(--font-body-3);
   color: var(--color-text-sub);
 }
+.pay__amount-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.pay__total-strike {
+  font: var(--font-caption);
+  color: var(--color-text-tert);
+  text-decoration: line-through;
+}
 .pay__amount {
   font: var(--font-title-3);
   color: var(--color-text-strong);
@@ -322,9 +346,17 @@ function fmtDate(s: string) {
 .chip--success {
   background: rgba(0, 200, 150, 0.12);
   color: var(--color-success);
+  font-weight: 600;
 }
-.chip--memo {
+.chip--point-used {
   background: var(--color-primary-soft);
   color: var(--color-primary);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 12px;
+}
+.chip--memo {
+  background: var(--color-line-soft);
+  color: var(--color-text-sub);
 }
 </style>
