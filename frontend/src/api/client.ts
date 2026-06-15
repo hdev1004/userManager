@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE ?? '/api',
+  baseURL: import.meta.env.VITE_API_BASE ?? '/userManage/api',
   withCredentials: false,
 })
 
@@ -29,8 +29,8 @@ api.interceptors.response.use(
   (err) => {
     if (err?.response?.status === 401) {
       setToken(null)
-      if (!location.pathname.startsWith('/login')) {
-        location.replace('/login')
+      if (!location.pathname.startsWith(import.meta.env.BASE_URL + 'login')) {
+        location.replace(import.meta.env.BASE_URL + 'login')
       }
     }
     return Promise.reject(err)
