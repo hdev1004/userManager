@@ -8,6 +8,7 @@ import {
   Banknote,
   CreditCard,
   Receipt,
+  StickyNote,
 } from 'lucide-vue-next'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -176,6 +177,7 @@ onMounted(load)
             <th class="th-name">회원</th>
             <th class="th-items">항목</th>
             <th class="th-method">결제</th>
+            <th class="th-tag">메모</th>
             <th class="th-amount">금액</th>
           </tr>
         </thead>
@@ -201,6 +203,13 @@ onMounted(load)
                 <CreditCard v-else :size="14" />
                 {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
               </span>
+            </td>
+            <td class="td-tag">
+              <span v-if="p.memo" class="tag tag--memo">
+                <StickyNote :size="14" />
+                <span>메모</span>
+              </span>
+              <span v-else class="tag tag--none">—</span>
             </td>
             <td class="td-amount">
               <div class="amount num">₩{{ p.final_amount.toLocaleString() }}</div>
@@ -285,7 +294,7 @@ onMounted(load)
   margin-top: 16px;
 }
 .stats__hero {
-  background: var(--color-primary);
+  background: #1f2937;
   color: #fff;
   border-radius: 16px;
   padding: 24px 28px;
@@ -298,7 +307,7 @@ onMounted(load)
 .stats__hero-label {
   font-size: 16px;
   font-weight: 700;
-  opacity: 0.85;
+  color: #cbd5e1;
 }
 .stats__hero-value {
   font-size: 36px;
@@ -309,7 +318,7 @@ onMounted(load)
 .stats__hero-count {
   font-size: 18px;
   font-weight: 600;
-  opacity: 0.85;
+  color: #cbd5e1;
   margin-left: 4px;
 }
 
@@ -443,6 +452,7 @@ onMounted(load)
 .th-time, .td-time { width: 80px; }
 .th-name, .td-name { width: 160px; }
 .th-method, .td-method { width: 110px; }
+.th-tag, .td-tag { width: 110px; }
 .th-amount, .td-amount { width: 220px; text-align: right; }
 
 .td-time {
@@ -493,6 +503,28 @@ onMounted(load)
   color: #4338ca;
 }
 
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1;
+}
+.tag--memo {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.tag--none {
+  color: var(--color-text-tert);
+  font-weight: 600;
+  font-size: 16px;
+}
+
 .td-amount {
   text-align: right;
 }
@@ -528,7 +560,7 @@ onMounted(load)
     border: 0;
     padding: 2px 0;
   }
-  .td-time, .td-name, .td-method, .td-amount, .td-items {
+  .td-time, .td-name, .td-method, .td-tag, .td-amount, .td-items {
     width: auto !important;
     text-align: left;
   }
@@ -542,6 +574,7 @@ onMounted(load)
   .td-name { grid-row: 1; grid-column: 2; }
   .td-amount { grid-row: 1; grid-column: 3; text-align: right; }
   .td-items { grid-row: 2; grid-column: 1 / -1; white-space: normal; }
-  .td-method { grid-row: 3; grid-column: 1 / -1; }
+  .td-method { grid-row: 3; grid-column: 1; }
+  .td-tag { grid-row: 3; grid-column: 2 / -1; text-align: right; }
 }
 </style>
