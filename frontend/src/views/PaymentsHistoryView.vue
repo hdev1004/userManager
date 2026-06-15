@@ -7,10 +7,6 @@ import {
   Calendar,
   Banknote,
   CreditCard,
-  Coins,
-  PlusCircle,
-  StickyNote,
-  Image as ImageIcon,
   Receipt,
 } from 'lucide-vue-next'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -70,6 +66,11 @@ function fmtTime(s: string) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+function itemsLabel(items: { item_name: string; quantity: number }[]) {
+  if (items.length === 0) return ''
+  return items.map((it) => `${it.item_name} x ${it.quantity}`).join(', ')
+}
+
 watch(date, load)
 onMounted(load)
 </script>
@@ -78,6 +79,7 @@ onMounted(load)
   <div class="page">
     <h1 class="page__title">결제 내역</h1>
 
+    <!-- 날짜 선택 -->
     <AppCard padding="lg">
       <div class="date-nav">
         <button class="date-nav__arrow" type="button" @click="shift(-1)" aria-label="이전 날짜">
@@ -87,11 +89,7 @@ onMounted(load)
         <div class="date-nav__center">
           <label class="date-nav__picker">
             <Calendar :size="18" />
-            <input
-              type="date"
-              v-model="date"
-              class="date-nav__input"
-            />
+            <input type="date" v-model="date" class="date-nav__input" />
           </label>
           <div class="date-nav__label">{{ dayLabel }}</div>
         </div>
@@ -100,48 +98,64 @@ onMounted(load)
           <ChevronRight :size="22" />
         </button>
 
-        <AppButton
-          variant="outline"
-          size="medium"
-          :disabled="isToday"
-          @click="date = today()"
-        >
+        <AppButton variant="outline" size="medium" :disabled="isToday" @click="date = today()">
           오늘
         </AppButton>
       </div>
     </AppCard>
 
-    <AppCard padding="lg" style="margin-top: 16px" v-if="data">
-      <div class="summary">
-        <div class="summary__cell">
-          <div class="summary__label">건수</div>
-          <div class="summary__value num">{{ data.summary.count.toLocaleString() }}건</div>
+    <!-- 요약 -->
+    <div class="stats" v-if="data">
+      <!-- 메인: 매출 합계 -->
+      <div class="stats__hero">
+        <div class="stats__hero-label">매출 합계</div>
+        <div class="stats__hero-value num">
+          ₩{{ data.summary.final.toLocaleString() }}
+          <span class="stats__hero-count num">· {{ data.summary.count.toLocaleString() }}건</span>
         </div>
-        <div class="summary__cell summary__cell--main">
-          <div class="summary__label">매출 합계</div>
-          <div class="summary__value summary__value--strong num">
-            ₩{{ data.summary.final.toLocaleString() }}
+      </div>
+
+      <!-- 보조: 결제수단 / 포인트 -->
+      <div class="stats__grid">
+        <div class="stat">
+          <div class="stat__icon stat__icon--cash"><Banknote :size="18" /></div>
+          <div class="stat__body">
+            <div class="stat__label">현금</div>
+            <div class="stat__value num">₩{{ data.summary.cash_total.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="summary__cell">
-          <div class="summary__label">현금 / 카드</div>
-          <div class="summary__value num">
-            <span class="num">{{ data.summary.cash_total.toLocaleString() }}</span>
-            <span class="summary__divider">/</span>
-            <span class="num">{{ data.summary.card_total.toLocaleString() }}</span>
+
+        <div class="stat">
+          <div class="stat__icon stat__icon--card"><CreditCard :size="18" /></div>
+          <div class="stat__body">
+            <div class="stat__label">카드</div>
+            <div class="stat__value num">₩{{ data.summary.card_total.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="summary__cell">
-          <div class="summary__label">포인트 적립 / 사용</div>
-          <div class="summary__value num">
-            <span class="summary__earn">+{{ data.summary.point_earned.toLocaleString() }}P</span>
-            <span class="summary__divider">/</span>
-            <span class="summary__use">-{{ data.summary.point_used.toLocaleString() }}P</span>
+
+        <div class="stat">
+          <div class="stat__icon stat__icon--earn">+</div>
+          <div class="stat__body">
+            <div class="stat__label">포인트 적립</div>
+            <div class="stat__value stat__value--earn num">
+              {{ data.summary.point_earned.toLocaleString() }} P
+            </div>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__icon stat__icon--use">−</div>
+          <div class="stat__body">
+            <div class="stat__label">포인트 사용</div>
+            <div class="stat__value stat__value--use num">
+              {{ data.summary.point_used.toLocaleString() }} P
+            </div>
           </div>
         </div>
       </div>
-    </AppCard>
+    </div>
 
+    <!-- 로딩 / 빈 상태 -->
     <div v-if="loading" class="t-body-2 text-tert" style="margin-top: 24px; text-align: center; padding: 24px">
       불러오는 중...
     </div>
@@ -153,60 +167,54 @@ onMounted(load)
       </div>
     </AppCard>
 
-    <div class="paylist" v-else-if="data">
-      <button
-        v-for="p in data.rows"
-        :key="p.id"
-        class="pay"
-        type="button"
-        @click="router.push(`/members/${p.member_id}/payments/${p.id}`)"
-      >
-        <div class="pay__head">
-          <div class="pay__time num">{{ fmtTime(p.paid_at) }}</div>
-          <div
-            class="pay__name"
-            @click.stop="router.push(`/members/${p.member_id}`)"
+    <!-- 테이블 -->
+    <div v-else-if="data" class="table-wrap">
+      <table class="ptable">
+        <thead>
+          <tr>
+            <th class="th-time">시간</th>
+            <th class="th-name">회원</th>
+            <th class="th-items">항목</th>
+            <th class="th-method">결제</th>
+            <th class="th-amount">금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="p in data.rows"
+            :key="p.id"
+            class="row"
+            @click="router.push(`/members/${p.member_id}/payments/${p.id}`)"
           >
-            {{ p.member_name }}
-          </div>
-          <div class="pay__spacer" />
-          <div class="pay__amount-wrap">
-            <span
-              v-if="p.point_used > 0"
-              class="pay__total-strike num"
-            >{{ p.total_amount.toLocaleString() }}원</span>
-            <span class="pay__amount num">{{ p.final_amount.toLocaleString() }}원</span>
-          </div>
-        </div>
-        <div class="pay__items">
-          <span v-for="(it, idx) in p.items" :key="it.id">
-            {{ it.item_name }} x {{ it.quantity }}<span v-if="idx < p.items.length - 1">, </span>
-          </span>
-        </div>
-        <div class="pay__foot">
-          <span class="chip chip--method">
-            <Banknote v-if="p.payment_method === 'CASH'" :size="16" />
-            <CreditCard v-else :size="16" />
-            {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
-          </span>
-          <span v-if="p.point_used > 0" class="chip chip--point-used">
-            <Coins :size="16" />
-            포인트 사용 {{ p.point_used.toLocaleString() }}P
-          </span>
-          <span v-if="p.point_earned > 0" class="chip chip--success">
-            <PlusCircle :size="16" />
-            적립 {{ p.point_earned.toLocaleString() }}P
-          </span>
-          <span v-if="p.images.length > 0" class="chip chip--image">
-            <ImageIcon :size="16" />
-            사진 {{ p.images.length }}장
-          </span>
-          <span v-if="p.memo" class="chip chip--memo">
-            <StickyNote :size="16" />
-            메모
-          </span>
-        </div>
-      </button>
+            <td class="td-time num">{{ fmtTime(p.paid_at) }}</td>
+            <td class="td-name">
+              <button
+                type="button"
+                class="name-link"
+                @click.stop="router.push(`/members/${p.member_id}`)"
+              >{{ p.member_name }}</button>
+            </td>
+            <td class="td-items">{{ itemsLabel(p.items) }}</td>
+            <td class="td-method">
+              <span class="method" :class="p.payment_method === 'CARD' ? 'method--card' : 'method--cash'">
+                <Banknote v-if="p.payment_method === 'CASH'" :size="14" />
+                <CreditCard v-else :size="14" />
+                {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
+              </span>
+            </td>
+            <td class="td-amount">
+              <div class="amount num">₩{{ p.final_amount.toLocaleString() }}</div>
+              <div v-if="p.point_used > 0" class="amount-sub num">
+                <span class="strike">{{ p.total_amount.toLocaleString() }}</span>
+                · {{ p.point_used.toLocaleString() }}P 사용
+              </div>
+              <div v-else-if="p.point_earned > 0" class="amount-sub amount-sub--earn num">
+                +{{ p.point_earned.toLocaleString() }}P 적립
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -218,6 +226,7 @@ onMounted(load)
   color: var(--color-text-strong);
 }
 
+/* ===== 날짜 선택 ===== */
 .date-nav {
   display: flex;
   align-items: center;
@@ -271,50 +280,118 @@ onMounted(load)
   color: var(--color-text-sub);
 }
 
-.summary {
+/* ===== 요약 ===== */
+.stats {
+  margin-top: 16px;
+}
+.stats__hero {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+}
+.stats__hero-label {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.stats__hero-value {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.stats__hero-count {
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-left: 4px;
+}
+
+.stats__grid {
+  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 10px;
 }
-.summary__cell {
-  padding: 4px 0;
+.stat {
+  background: #fff;
+  border: var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.summary__cell--main {
-  background: var(--color-primary-soft);
-  border-radius: 12px;
-  padding: 12px 16px;
+.stat__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  flex-shrink: 0;
 }
-.summary__label {
-  font: var(--font-caption);
-  color: var(--color-text-tert);
-  margin-bottom: 4px;
+.stat__icon--cash {
+  background: #ecfdf5;
+  color: #047857;
 }
-.summary__value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--color-text-strong);
+.stat__icon--card {
+  background: #eef2ff;
+  color: #4338ca;
 }
-.summary__value--strong {
-  font-size: 26px;
-  color: var(--color-primary);
-}
-.summary__divider {
-  color: var(--color-text-tert);
-  margin: 0 6px;
-  font-weight: 400;
-}
-.summary__earn {
+.stat__icon--earn {
+  background: rgba(0, 200, 150, 0.18);
   color: #00855e;
 }
-.summary__use {
+.stat__icon--use {
+  background: var(--color-primary-soft);
   color: var(--color-primary);
 }
+.stat__body {
+  min-width: 0;
+}
+.stat__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-tert);
+  margin-bottom: 2px;
+}
+.stat__value {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+}
+.stat__value--earn {
+  color: #00855e;
+}
+.stat__value--use {
+  color: var(--color-primary);
+}
+
 @media (max-width: 880px) {
-  .summary {
+  .stats__grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .stats__hero-value {
+    font-size: 28px;
+  }
+  .stats__hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 }
 
+/* ===== 빈/로딩 ===== */
 .empty {
   display: flex;
   flex-direction: column;
@@ -324,128 +401,147 @@ onMounted(load)
   color: var(--color-text-tert);
 }
 
-.paylist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* ===== 테이블 ===== */
+.table-wrap {
   margin-top: 16px;
-}
-.pay {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px;
-  border: 1px solid var(--color-line);
-  border-radius: 14px;
   background: #fff;
-  text-align: left;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-.pay:hover {
-  background: var(--color-bg-hover);
-}
-.pay__head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.pay__time {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-strong);
-  min-width: 56px;
-}
-.pay__name {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--color-primary);
-  padding: 4px 10px;
-  border-radius: 8px;
-  transition: background 120ms ease;
-}
-.pay__name:hover {
-  background: var(--color-primary-soft);
-}
-.pay__spacer {
-  flex: 1;
-}
-.pay__amount-wrap {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.pay__total-strike {
-  font: var(--font-body-3);
-  color: var(--color-text-tert);
-  text-decoration: line-through;
-}
-.pay__amount {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-text-strong);
-}
-.pay__items {
-  font: var(--font-body-2);
-  font-size: 16px;
-  color: var(--color-text-sub);
-  line-height: 24px;
-  padding-left: 70px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  border: var(--border);
+  border-radius: 14px;
   overflow: hidden;
 }
-.pay__foot {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-left: 70px;
+.ptable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
 }
-.chip {
+.ptable thead th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text-tert);
+  background: var(--color-bg-hover);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-line);
+  white-space: nowrap;
+}
+.ptable tbody td {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-line-soft);
+  vertical-align: middle;
+}
+.ptable tbody tr:last-child td {
+  border-bottom: 0;
+}
+.row {
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+.row:hover {
+  background: var(--color-bg-hover);
+}
+
+.th-time, .td-time { width: 80px; }
+.th-name, .td-name { width: 160px; }
+.th-method, .td-method { width: 110px; }
+.th-amount, .td-amount { width: 220px; text-align: right; }
+
+.td-time {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+.name-link {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-primary);
+  background: transparent;
+  transition: background 120ms ease;
+}
+.name-link:hover {
+  background: var(--color-primary-soft);
+}
+.td-items {
+  color: var(--color-text-sub);
+  font-size: 15px;
+  line-height: 22px;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.method {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: var(--radius-pill);
-  background: var(--color-line-soft);
-  color: var(--color-text-sub);
   font-size: 14px;
   font-weight: 700;
-  line-height: 1;
+  white-space: nowrap;
 }
-.chip--success {
-  background: rgba(0, 200, 150, 0.18);
-  color: #00855e;
+.method--cash {
+  background: #ecfdf5;
+  color: #047857;
 }
-.chip--point-used {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-size: 15px;
-  padding: 9px 16px;
-}
-.chip--image {
-  background: #ffedd5;
-  color: #c2410c;
-}
-.chip--memo {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-.chip--method {
-  background: #1f2937;
-  color: #fff;
+.method--card {
+  background: #eef2ff;
+  color: #4338ca;
 }
 
+.td-amount {
+  text-align: right;
+}
+.amount {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+}
+.amount-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-tert);
+  font-weight: 600;
+}
+.amount-sub--earn {
+  color: #00855e;
+}
+.amount-sub .strike {
+  text-decoration: line-through;
+  margin-right: 2px;
+}
+
+/* ===== 모바일: 카드 폴백 ===== */
 @media (max-width: 640px) {
-  .pay__head {
-    flex-wrap: wrap;
+  .ptable thead { display: none; }
+  .ptable, .ptable tbody, .ptable tr, .ptable td { display: block; width: 100%; }
+  .ptable tbody tr {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-line-soft);
   }
-  .pay__items, .pay__foot {
-    padding-left: 0;
+  .ptable tbody td {
+    border: 0;
+    padding: 2px 0;
   }
-  .pay__amount {
-    font-size: 18px;
+  .td-time, .td-name, .td-method, .td-amount, .td-items {
+    width: auto !important;
+    text-align: left;
   }
+  .row {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .td-time { grid-row: 1; grid-column: 1; }
+  .td-name { grid-row: 1; grid-column: 2; }
+  .td-amount { grid-row: 1; grid-column: 3; text-align: right; }
+  .td-items { grid-row: 2; grid-column: 1 / -1; white-space: normal; }
+  .td-method { grid-row: 3; grid-column: 1 / -1; }
 }
 </style>

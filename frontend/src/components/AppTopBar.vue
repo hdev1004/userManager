@@ -26,13 +26,13 @@ async function logout() {
           <Search :size="18" />
           <span>회원 검색</span>
         </RouterLink>
-        <RouterLink to="/history" class="nav-item" active-class="nav-item--active">
-          <CalendarDays :size="18" />
-          <span>결제 내역</span>
-        </RouterLink>
         <RouterLink to="/items" class="nav-item" active-class="nav-item--active">
           <Package :size="18" />
           <span>물품 관리</span>
+        </RouterLink>
+        <RouterLink to="/history" class="nav-item" active-class="nav-item--active">
+          <CalendarDays :size="18" />
+          <span>결제 내역</span>
         </RouterLink>
         <RouterLink to="/stats" class="nav-item" active-class="nav-item--active">
           <BarChart3 :size="18" />

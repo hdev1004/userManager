@@ -8,15 +8,12 @@ import {
   Trash2,
   Phone,
   User,
-  Image as ImageIcon,
-  Calendar,
   Coins,
-  PlusCircle,
-  StickyNote,
   Paperclip,
   Banknote,
   CreditCard,
   AlertTriangle,
+  StickyNote,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -126,6 +123,10 @@ function fmtPhone(p: string | null) {
 function fmtDate(s: string) {
   const d = new Date(s)
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+function itemsLabel(items: { item_name: string; quantity: number }[]) {
+  if (items.length === 0) return ''
+  return items.map((it) => `${it.item_name} x ${it.quantity}`).join(', ')
 }
 </script>
 
@@ -238,56 +239,53 @@ function fmtDate(s: string) {
             '결제 내역이 없습니다.'
           }}
         </div>
-        <div v-else class="paylist">
-          <button
-            v-for="p in payments"
-            :key="p.id"
-            class="pay"
-            type="button"
-            @click="router.push(`/members/${member.id}/payments/${p.id}`)"
-          >
-            <div class="pay__head">
-              <div class="pay__date">
-                <Calendar :size="14" />
-                <span>{{ fmtDate(p.paid_at) }}</span>
-              </div>
-              <div class="pay__amount-wrap">
-                <span
-                  v-if="p.point_used > 0"
-                  class="pay__total-strike num"
-                >{{ p.total_amount.toLocaleString() }}원</span>
-                <span class="pay__amount num">{{ p.final_amount.toLocaleString() }}원</span>
-              </div>
-            </div>
-            <div class="pay__items">
-              <span v-for="(it, idx) in p.items" :key="it.id">
-                {{ it.item_name }} x {{ it.quantity }}<span v-if="idx < p.items.length - 1">, </span>
-              </span>
-            </div>
-            <div class="pay__foot">
-              <span class="chip chip--method">
-                <Banknote v-if="p.payment_method === 'CASH'" :size="16" />
-                <CreditCard v-else :size="16" />
-                {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
-              </span>
-              <span v-if="p.point_used > 0" class="chip chip--point-used">
-                <Coins :size="16" />
-                포인트 사용 {{ p.point_used.toLocaleString() }}P
-              </span>
-              <span v-if="p.point_earned > 0" class="chip chip--success">
-                <PlusCircle :size="16" />
-                적립 {{ p.point_earned.toLocaleString() }}P
-              </span>
-              <span v-if="p.images.length > 0" class="chip chip--image">
-                <ImageIcon :size="16" />
-                사진 {{ p.images.length }}장
-              </span>
-              <span v-if="p.memo" class="chip chip--memo">
-                <StickyNote :size="16" />
-                메모
-              </span>
-            </div>
-          </button>
+        <div v-else class="table-wrap">
+          <table class="ptable">
+            <thead>
+              <tr>
+                <th class="th-date">날짜</th>
+                <th class="th-items">항목</th>
+                <th class="th-method">결제</th>
+                <th class="th-tag">메모</th>
+                <th class="th-amount">금액</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="p in payments"
+                :key="p.id"
+                class="row"
+                @click="router.push(`/members/${member.id}/payments/${p.id}`)"
+              >
+                <td class="td-date num">{{ fmtDate(p.paid_at) }}</td>
+                <td class="td-items">{{ itemsLabel(p.items) }}</td>
+                <td class="td-method">
+                  <span class="method" :class="p.payment_method === 'CARD' ? 'method--card' : 'method--cash'">
+                    <Banknote v-if="p.payment_method === 'CASH'" :size="14" />
+                    <CreditCard v-else :size="14" />
+                    {{ p.payment_method === 'CASH' ? '현금' : '카드' }}
+                  </span>
+                </td>
+                <td class="td-tag">
+                  <span v-if="p.memo" class="tag tag--memo">
+                    <StickyNote :size="14" />
+                    <span>메모</span>
+                  </span>
+                  <span v-else class="tag tag--none">—</span>
+                </td>
+                <td class="td-amount">
+                  <div class="amount num">₩{{ p.final_amount.toLocaleString() }}</div>
+                  <div v-if="p.point_used > 0" class="amount-sub num">
+                    <span class="strike">{{ p.total_amount.toLocaleString() }}</span>
+                    · {{ p.point_used.toLocaleString() }}P 사용
+                  </div>
+                  <div v-else-if="p.point_earned > 0" class="amount-sub amount-sub--earn num">
+                    +{{ p.point_earned.toLocaleString() }}P 적립
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div v-if="hasMore && payments.length > 0" class="more">
@@ -495,110 +493,162 @@ function fmtDate(s: string) {
   }
 }
 
-.paylist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pay {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px;
-  border: 1px solid var(--color-line);
-  border-radius: 14px;
+/* ===== 테이블 ===== */
+.table-wrap {
   background: #fff;
-  text-align: left;
-  cursor: pointer;
-  transition: all 120ms ease;
+  border: var(--border);
+  border-radius: 14px;
+  overflow: hidden;
 }
-.pay:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-line);
-}
-.pay__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.pay__date {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font: var(--font-body-2);
+.ptable {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-sub);
 }
-.pay__amount-wrap {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.pay__total-strike {
-  font: var(--font-body-3);
+.ptable thead th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
   color: var(--color-text-tert);
-  text-decoration: line-through;
+  background: var(--color-bg-hover);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-line);
+  white-space: nowrap;
 }
-.pay__amount {
-  font-size: 22px;
+.ptable tbody td {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-line-soft);
+  vertical-align: middle;
+}
+.ptable tbody tr:last-child td {
+  border-bottom: 0;
+}
+.row {
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+.row:hover {
+  background: var(--color-bg-hover);
+}
+
+.th-date, .td-date { width: 130px; }
+.th-method, .td-method { width: 110px; }
+.th-tag, .td-tag { width: 110px; }
+.th-amount, .td-amount { width: 220px; text-align: right; }
+
+.td-date {
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text-strong);
 }
-.pay__items {
-  font: var(--font-body-2);
-  font-size: 16px;
+.td-items {
   color: var(--color-text-sub);
-  line-height: 24px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-size: 15px;
+  line-height: 22px;
+  max-width: 400px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pay__foot {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chip {
+
+.method {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: var(--radius-pill);
-  background: var(--color-line-soft);
-  color: var(--color-text-sub);
   font-size: 14px;
   font-weight: 700;
+  white-space: nowrap;
+}
+.method--cash {
+  background: #ecfdf5;
+  color: #047857;
+}
+.method--card {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.td-tag {
+  display: table-cell;
+}
+.td-tag > * + * {
+  margin-left: 6px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
   line-height: 1;
 }
-.chip--success {
-  background: rgba(0, 200, 150, 0.18);
-  color: #00855e;
-}
-.chip--point-used {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-size: 15px;
-  padding: 9px 16px;
-}
-/* 사진 — 진한 오렌지 */
-.chip--image {
-  background: #ffedd5;
-  color: #c2410c;
-}
-/* 메모 — 진한 보라 */
-.chip--memo {
+.tag--memo {
   background: #ede9fe;
   color: #6d28d9;
 }
-/* 결제 수단 — 다크 그레이 */
-.chip--method {
-  background: #1f2937;
-  color: #fff;
+.tag--none {
+  color: var(--color-text-tert);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.amount {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+}
+.amount-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-tert);
+  font-weight: 600;
+}
+.amount-sub--earn {
+  color: #00855e;
+}
+.amount-sub .strike {
+  text-decoration: line-through;
+  margin-right: 2px;
 }
 
 .more {
   margin-top: 16px;
+}
+
+/* ===== 모바일: 카드 폴백 ===== */
+@media (max-width: 640px) {
+  .ptable thead { display: none; }
+  .ptable, .ptable tbody, .ptable tr, .ptable td { display: block; width: 100%; }
+  .ptable tbody tr {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-line-soft);
+  }
+  .ptable tbody td {
+    border: 0;
+    padding: 2px 0;
+  }
+  .td-date, .td-items, .td-method, .td-tag, .td-amount {
+    width: auto !important;
+    text-align: left;
+  }
+  .row {
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .td-date { grid-row: 1; grid-column: 1; }
+  .td-amount { grid-row: 1; grid-column: 2; text-align: right; }
+  .td-items { grid-row: 2; grid-column: 1 / -1; white-space: normal; }
+  .td-method { grid-row: 3; grid-column: 1; }
+  .td-tag { grid-row: 3; grid-column: 2; text-align: right; }
 }
 </style>
