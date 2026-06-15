@@ -222,39 +222,49 @@ export class MembersService {
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const safeOffset = Math.max(0, offset);
 
-    const { rows } = await this.pool.query(
-      `SELECT p.id, p.paid_at, p.total_amount, p.point_used, p.point_earned,
-              p.final_amount, p.payment_method, p.memo,
-              COALESCE(json_agg(
-                json_build_object(
-                  'id', pi.id,
-                  'item_name', pi.item_name,
-                  'unit_price', pi.unit_price,
-                  'quantity', pi.quantity,
-                  'amount', pi.amount
-                ) ORDER BY pi.id
-              ) FILTER (WHERE pi.id IS NOT NULL), '[]'::json) AS items,
-              COALESCE((
-                SELECT json_agg(
-                  json_build_object('id', img.id, 'file_path', img.file_path)
-                  ORDER BY img.id
-                )
-                  FROM marigold.payment_images img
-                 WHERE img.payment_id = p.id
-              ), '[]'::json) AS images
-         FROM marigold.payments p
-    LEFT JOIN marigold.payment_items pi ON pi.payment_id = p.id
-        WHERE p.member_id = $1 AND p.deleted_at IS NULL${filterClause}
-        GROUP BY p.id
-        ORDER BY p.paid_at DESC, p.id DESC
-        LIMIT $2 OFFSET $3`,
-      [id, safeLimit + 1, safeOffset],
-    );
+    const [pageRes, countRes] = await Promise.all([
+      this.pool.query(
+        `SELECT p.id, p.paid_at, p.total_amount, p.point_used, p.point_earned,
+                p.final_amount, p.payment_method, p.memo,
+                COALESCE(json_agg(
+                  json_build_object(
+                    'id', pi.id,
+                    'item_name', pi.item_name,
+                    'unit_price', pi.unit_price,
+                    'quantity', pi.quantity,
+                    'amount', pi.amount
+                  ) ORDER BY pi.id
+                ) FILTER (WHERE pi.id IS NOT NULL), '[]'::json) AS items,
+                COALESCE((
+                  SELECT json_agg(
+                    json_build_object('id', img.id, 'file_path', img.file_path)
+                    ORDER BY img.id
+                  )
+                    FROM marigold.payment_images img
+                   WHERE img.payment_id = p.id
+                ), '[]'::json) AS images
+           FROM marigold.payments p
+      LEFT JOIN marigold.payment_items pi ON pi.payment_id = p.id
+          WHERE p.member_id = $1 AND p.deleted_at IS NULL${filterClause}
+          GROUP BY p.id
+          ORDER BY p.paid_at DESC, p.id DESC
+          LIMIT $2 OFFSET $3`,
+        [id, safeLimit + 1, safeOffset],
+      ),
+      this.pool.query(
+        `SELECT COUNT(*)::int AS total
+           FROM marigold.payments p
+          WHERE p.member_id = $1 AND p.deleted_at IS NULL${filterClause}`,
+        [id],
+      ),
+    ]);
 
+    const rows = pageRes.rows;
     const hasMore = rows.length > safeLimit;
     return {
       rows: rows.slice(0, safeLimit),
       has_more: hasMore,
+      total: countRes.rows[0].total as number,
     };
   }
 

@@ -183,6 +183,63 @@ export class PaymentsService {
     }
   }
 
+  /**
+   * 특정 날짜(KST) 의 결제 목록 + 요약.
+   * date: 'YYYY-MM-DD'
+   */
+  async listByDate(date: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new BadRequestException('날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).');
+    }
+    const [rowsRes, sumRes] = await Promise.all([
+      this.pool.query(
+        `SELECT p.id, p.member_id, p.paid_at, p.total_amount, p.point_used,
+                p.point_earned, p.final_amount, p.payment_method, p.memo,
+                m.name AS member_name, m.phone AS member_phone,
+                COALESCE(json_agg(
+                  json_build_object(
+                    'id', pi.id,
+                    'item_name', pi.item_name,
+                    'unit_price', pi.unit_price,
+                    'quantity', pi.quantity,
+                    'amount', pi.amount
+                  ) ORDER BY pi.id
+                ) FILTER (WHERE pi.id IS NOT NULL), '[]'::json) AS items,
+                COALESCE((
+                  SELECT json_agg(
+                    json_build_object('id', img.id, 'file_path', img.file_path)
+                    ORDER BY img.id
+                  )
+                    FROM marigold.payment_images img
+                   WHERE img.payment_id = p.id
+                ), '[]'::json) AS images
+           FROM marigold.payments p
+           JOIN marigold.members  m  ON m.id = p.member_id
+      LEFT JOIN marigold.payment_items pi ON pi.payment_id = p.id
+          WHERE p.deleted_at IS NULL
+            AND (p.paid_at AT TIME ZONE 'Asia/Seoul')::date = $1::date
+          GROUP BY p.id, m.name, m.phone
+          ORDER BY p.paid_at ASC, p.id ASC`,
+        [date],
+      ),
+      this.pool.query(
+        `SELECT
+            COUNT(*)::int                                                       AS count,
+            COALESCE(SUM(total_amount), 0)::int                                 AS total,
+            COALESCE(SUM(final_amount), 0)::int                                 AS final,
+            COALESCE(SUM(point_used), 0)::int                                   AS point_used,
+            COALESCE(SUM(point_earned), 0)::int                                 AS point_earned,
+            COALESCE(SUM(CASE WHEN payment_method = 'CASH' THEN final_amount END), 0)::int AS cash_total,
+            COALESCE(SUM(CASE WHEN payment_method = 'CARD' THEN final_amount END), 0)::int AS card_total
+           FROM marigold.payments
+          WHERE deleted_at IS NULL
+            AND (paid_at AT TIME ZONE 'Asia/Seoul')::date = $1::date`,
+        [date],
+      ),
+    ]);
+    return { date, summary: sumRes.rows[0], rows: rowsRes.rows };
+  }
+
   async getById(id: number) {
     const { rows } = await this.pool.query(
       `SELECT p.id, p.member_id, p.paid_at, p.total_amount, p.point_used,

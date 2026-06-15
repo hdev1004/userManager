@@ -46,6 +46,7 @@ export type PaymentFilter = 'all' | 'point_used' | 'has_attachment'
 export interface PaymentPage {
   rows: PaymentSummary[]
   has_more: boolean
+  total: number
 }
 
 export const membersApi = {

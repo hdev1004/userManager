@@ -18,6 +18,7 @@ const routes = [
       { path: 'members/:id/edit', name: 'member-edit', component: () => import('@/views/MemberEditView.vue'), props: true },
       { path: 'members/:id/payments/new', name: 'payment-new', component: () => import('@/views/PaymentCreateView.vue'), props: true },
       { path: 'members/:id/payments/:pid', name: 'payment-edit', component: () => import('@/views/PaymentEditView.vue'), props: true },
+      { path: 'history', name: 'history', component: () => import('@/views/PaymentsHistoryView.vue') },
       { path: 'items', name: 'items', component: () => import('@/views/ItemsView.vue') },
       { path: 'stats', name: 'stats', component: () => import('@/views/StatsView.vue') },
       { path: 'account/password', name: 'change-password', component: () => import('@/views/ChangePasswordView.vue') },

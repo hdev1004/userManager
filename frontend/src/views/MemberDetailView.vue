@@ -41,6 +41,7 @@ const payments = ref<PaymentSummary[]>([])
 const loading = ref(true)
 const loadingMore = ref(false)
 const hasMore = ref(false)
+const totalCount = ref(0)
 const filter = ref<PaymentFilter>('all')
 const confirmDelete = ref(false)
 const deleting = ref(false)
@@ -70,6 +71,7 @@ async function loadPayments(reset = true) {
     })
     payments.value = reset ? res.rows : [...payments.value, ...res.rows]
     hasMore.value = res.has_more
+    totalCount.value = res.total
   } catch (e) {
     toast.error(errorMessage(e))
   } finally {
@@ -186,6 +188,7 @@ function fmtDate(s: string) {
         <template #header>
           <div class="paylist__head-l">
             <h3 class="paylist__title">결제 내역</h3>
+            <span class="paylist__count num">총 {{ totalCount.toLocaleString() }}건</span>
             <button
               v-if="payments.length > 0 || filter !== 'all'"
               type="button"
@@ -420,6 +423,14 @@ function fmtDate(s: string) {
   margin: 0;
   font: var(--font-title-2);
   color: var(--color-text-strong);
+}
+.paylist__count {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
 }
 .paylist__danger-btn {
   display: inline-flex;

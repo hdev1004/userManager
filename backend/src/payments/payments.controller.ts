@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -32,6 +33,13 @@ export class PaymentsController {
     @CurrentAdmin() admin: AdminPayload,
   ) {
     return this.svc.create(dto, admin.sub);
+  }
+
+  // 주의: ':id' 보다 먼저 정의되어야 함
+  @Get('by-date')
+  byDate(@Query('date') date: string) {
+    if (!date) throw new BadRequestException('date 쿼리(YYYY-MM-DD)가 필요합니다.');
+    return this.svc.listByDate(date);
   }
 
   @Get(':id')

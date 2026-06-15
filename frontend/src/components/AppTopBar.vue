@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { LogOut, KeyRound, ChevronDown, Search, Package, BarChart3 } from 'lucide-vue-next'
+import { LogOut, KeyRound, ChevronDown, Search, Package, BarChart3, CalendarDays } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -25,6 +25,10 @@ async function logout() {
         <RouterLink to="/" class="nav-item" exact-active-class="nav-item--active">
           <Search :size="18" />
           <span>회원 검색</span>
+        </RouterLink>
+        <RouterLink to="/history" class="nav-item" active-class="nav-item--active">
+          <CalendarDays :size="18" />
+          <span>결제 내역</span>
         </RouterLink>
         <RouterLink to="/items" class="nav-item" active-class="nav-item--active">
           <Package :size="18" />

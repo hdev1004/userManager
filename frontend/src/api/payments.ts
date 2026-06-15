@@ -32,6 +32,22 @@ export interface Payment {
   images: Array<{ id: number; file_path: string }>
 }
 
+export interface DailyPaymentsSummary {
+  count: number
+  total: number
+  final: number
+  point_used: number
+  point_earned: number
+  cash_total: number
+  card_total: number
+}
+
+export interface DailyPayments {
+  date: string
+  summary: DailyPaymentsSummary
+  rows: Payment[]
+}
+
 export const paymentsApi = {
   create(body: {
     member_id: number
@@ -42,6 +58,11 @@ export const paymentsApi = {
     memo?: string
   }) {
     return api.post<Payment>('/payments', body).then((r) => r.data)
+  },
+  byDate(date: string) {
+    return api
+      .get<DailyPayments>('/payments/by-date', { params: { date } })
+      .then((r) => r.data)
   },
   get(id: number) {
     return api.get<Payment>(`/payments/${id}`).then((r) => r.data)
