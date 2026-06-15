@@ -28,6 +28,7 @@ onMounted(() => {
   background: var(--color-bg-page);
 }
 .layout__main {
-  padding-top: var(--top-bar-h);
+  padding-top: calc(var(--top-bar-h) + env(safe-area-inset-top));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 </style>

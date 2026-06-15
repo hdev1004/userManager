@@ -19,7 +19,7 @@ async function logout() {
 <template>
   <header class="topbar">
     <div class="topbar__inner">
-      <RouterLink to="/" class="topbar__brand">marigold</RouterLink>
+      <RouterLink to="/" class="topbar__brand">회원관리</RouterLink>
 
       <nav class="topbar__nav">
         <RouterLink to="/" class="nav-item" exact-active-class="nav-item--active">
@@ -62,7 +62,8 @@ async function logout() {
   top: 0;
   left: 0;
   right: 0;
-  height: var(--top-bar-h);
+  height: calc(var(--top-bar-h) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   background: #fff;
   border-bottom: 1px solid var(--color-line-soft);
   z-index: 20;

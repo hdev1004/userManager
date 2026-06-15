@@ -40,8 +40,8 @@ async function submit() {
   <div class="login">
     <section class="login__box">
       <div class="login__brand">
-        <span class="login__brand-name">marigold</span>
-        <span class="login__brand-sub">회원 관리</span>
+        <span class="login__brand-name">회원관리</span>
+        <span class="login__brand-sub">관리자 로그인</span>
       </div>
 
       <form class="login__form" @submit.prevent="submit">
