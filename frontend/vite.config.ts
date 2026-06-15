@@ -25,4 +25,18 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 3005,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3004',
+        changeOrigin: true,
+      },
+      '/static': {
+        target: 'http://localhost:3004',
+        changeOrigin: true,
+      },
+    },
+  },
 })
