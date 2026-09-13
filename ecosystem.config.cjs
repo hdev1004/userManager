@@ -1,8 +1,14 @@
 // PM2 ecosystem — 운영 서버 (/root/projects/userManager) 기준
 // 사용:
-//   pm2 start ecosystem.config.cjs
-//   pm2 reload ecosystem.config.cjs   # 무중단 재시작
+//   ./deploy.sh                       # 배포 (git pull + 빌드 + reload) — 권장
+//   ./deploy.sh --no-pull             # 이미 pull 한 뒤 재빌드/재기동만
+//   pm2 start ecosystem.config.cjs    # 최초 기동 (dist/ 존재해야 함)
+//   pm2 reload ecosystem.config.cjs   # 무중단 재시작 (소스 변경 없을 때만)
 //   pm2 save && pm2 startup           # 부팅 시 자동 기동
+//
+// 주의: 소스만 pull 하면 화면 그대로. 반드시 build 필요.
+//   - frontend: vite preview 가 frontend/dist 를 서빙
+//   - backend : node 가 backend/dist/main.js 를 실행
 //
 // 로그: ./logs/{api,web}-{out,err}.log
 
