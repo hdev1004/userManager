@@ -8,6 +8,7 @@ const auth = useAuthStore()
 const router = useRouter()
 const open = ref(false)
 
+const baseUrl = import.meta.env.BASE_URL
 const adminLabel = computed(() => auth.admin?.name || auth.admin?.loginId || '관리자')
 
 async function logout() {
@@ -19,7 +20,7 @@ async function logout() {
 <template>
   <header class="topbar">
     <div class="topbar__inner">
-      <RouterLink to="/" class="topbar__brand">회원관리</RouterLink>
+      <a :href="baseUrl" class="topbar__brand">회원관리</a>
 
       <nav class="topbar__nav">
         <RouterLink to="/" class="nav-item" exact-active-class="nav-item--active">
