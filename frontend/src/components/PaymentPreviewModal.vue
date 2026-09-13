@@ -27,6 +27,13 @@ const payment = ref<Payment | null>(null)
 const loading = ref(false)
 const viewerOpen = ref(false)
 const viewerIndex = ref(0)
+const loadedImageIds = ref<Set<number>>(new Set())
+
+function markImageLoaded(id: number) {
+  const next = new Set(loadedImageIds.value)
+  next.add(id)
+  loadedImageIds.value = next
+}
 
 const staticBase = computed(() => {
   const base = (import.meta.env.VITE_STATIC_BASE as string) || '/userManage/static'
@@ -46,9 +53,11 @@ watch(
     if (!isOpen || !pid) {
       payment.value = null
       viewerOpen.value = false
+      loadedImageIds.value = new Set()
       return
     }
     loading.value = true
+    loadedImageIds.value = new Set()
     try {
       payment.value = await paymentsApi.get(pid)
     } catch (e) {
@@ -106,7 +115,14 @@ function goDetail() {
             class="gallery__item"
             @click="openViewer(idx)"
           >
-            <img :src="img.src" :alt="String(img.id)" />
+            <div v-if="!loadedImageIds.has(img.id)" class="gallery__skeleton" aria-hidden="true"></div>
+            <img
+              :src="img.src"
+              :alt="String(img.id)"
+              :class="{ 'gallery__img--hidden': !loadedImageIds.has(img.id) }"
+              @load="markImageLoaded(img.id)"
+              @error="markImageLoaded(img.id)"
+            />
           </button>
         </div>
         <div v-else class="empty">첨부된 사진이 없습니다.</div>
@@ -202,6 +218,7 @@ function goDetail() {
   }
 }
 .gallery__item {
+  position: relative;
   aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
@@ -219,5 +236,28 @@ function goDetail() {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 160ms ease;
+}
+.gallery__img--hidden {
+  opacity: 0;
+}
+.gallery__skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.12) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: gallerySkeleton 1.2s ease-in-out infinite;
+}
+@keyframes gallerySkeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gallery__skeleton { animation: none; }
 }
 </style>
