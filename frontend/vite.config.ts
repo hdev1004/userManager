@@ -14,18 +14,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 3005,
     proxy: {
       // dev 도 base '/userManage/' 를 쓰므로 axios baseURL 이 '/userManage/api'.
       // '/api' 로만 매칭하면 SPA fallback 이 index.html 을 돌려줘서 axios 가
       // HTML 문자열을 데이터로 받아 렌더가 깨짐.
       '/userManage/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3004',
         rewrite: (path) => path.replace(/^\/userManage/, ''),
         changeOrigin: true,
       },
       '/userManage/static': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3004',
         rewrite: (path) => path.replace(/^\/userManage/, ''),
         changeOrigin: true,
       },
