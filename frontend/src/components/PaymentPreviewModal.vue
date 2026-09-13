@@ -29,7 +29,7 @@ const viewerOpen = ref(false)
 const viewerIndex = ref(0)
 
 const staticBase = computed(() => {
-  const base = (import.meta.env.VITE_STATIC_BASE as string) || '/static'
+  const base = (import.meta.env.VITE_STATIC_BASE as string) || '/userManage/static'
   return base.replace(/\/$/, '')
 })
 
