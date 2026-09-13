@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,15 +9,28 @@ import {
   CreditCard,
   Receipt,
   StickyNote,
+  Image as ImageIcon,
 } from 'lucide-vue-next'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import PaymentPreviewModal from '@/components/PaymentPreviewModal.vue'
 import { paymentsApi, type DailyPayments } from '@/api/payments'
 import { errorMessage } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
+
+const previewOpen = ref(false)
+const previewMemberId = ref<number | null>(null)
+const previewPaymentId = ref<number | null>(null)
+
+function openPaymentPreview(memberId: number, paymentId: number) {
+  previewMemberId.value = memberId
+  previewPaymentId.value = paymentId
+  previewOpen.value = true
+}
 
 const today = () => {
   const d = new Date()
@@ -27,7 +40,13 @@ const today = () => {
   return `${y}-${m}-${dd}`
 }
 
-const date = ref<string>(today())
+function initialDate(): string {
+  const q = route.query.date
+  const s = Array.isArray(q) ? q[0] : q
+  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : today()
+}
+
+const date = ref<string>(initialDate())
 const data = ref<DailyPayments | null>(null)
 const loading = ref(true)
 
@@ -72,8 +91,27 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
   return items.map((it) => `${it.item_name} x ${it.quantity}`).join(', ')
 }
 
-watch(date, load)
-onMounted(load)
+function tagLabel(p: { memo: string | null; images: { id: number }[] }) {
+  const hasMemo = !!p.memo
+  const hasImage = p.images.length > 0
+  if (hasMemo && hasImage) return '메모 & 사진'
+  if (hasMemo) return '메모'
+  if (hasImage) return '사진'
+  return ''
+}
+
+watch(date, (v) => {
+  if (route.query.date !== v) {
+    router.replace({ query: { ...route.query, date: v } })
+  }
+  load()
+})
+onMounted(() => {
+  if (route.query.date !== date.value) {
+    router.replace({ query: { ...route.query, date: date.value } })
+  }
+  load()
+})
 </script>
 
 <template>
@@ -186,7 +224,7 @@ onMounted(load)
             v-for="p in data.rows"
             :key="p.id"
             class="row"
-            @click="router.push(`/members/${p.member_id}/payments/${p.id}`)"
+            @click="openPaymentPreview(p.member_id, p.id)"
           >
             <td class="td-time num">{{ fmtTime(p.paid_at) }}</td>
             <td class="td-name">
@@ -205,9 +243,10 @@ onMounted(load)
               </span>
             </td>
             <td class="td-tag">
-              <span v-if="p.memo" class="tag tag--memo">
-                <StickyNote :size="14" />
-                <span>메모</span>
+              <span v-if="p.memo || p.images.length" class="tag tag--memo">
+                <StickyNote v-if="p.memo" :size="14" />
+                <ImageIcon v-if="p.images.length" :size="14" />
+                <span>{{ tagLabel(p) }}</span>
               </span>
               <span v-else class="tag tag--none">—</span>
             </td>
@@ -225,6 +264,13 @@ onMounted(load)
         </tbody>
       </table>
     </div>
+
+    <PaymentPreviewModal
+      :open="previewOpen"
+      :member-id="previewMemberId"
+      :payment-id="previewPaymentId"
+      @close="previewOpen = false"
+    />
   </div>
 </template>
 

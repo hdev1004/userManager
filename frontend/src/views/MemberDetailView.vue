@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   StickyNote,
   Scissors,
+  Image as ImageIcon,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -136,6 +137,14 @@ function fmtDate(s: string) {
 function itemsLabel(items: { item_name: string; quantity: number }[]) {
   if (items.length === 0) return ''
   return items.map((it) => `${it.item_name} x ${it.quantity}`).join(', ')
+}
+function tagLabel(p: { memo: string | null; images: { id: number }[] }) {
+  const hasMemo = !!p.memo
+  const hasImage = p.images.length > 0
+  if (hasMemo && hasImage) return '메모 & 사진'
+  if (hasMemo) return '메모'
+  if (hasImage) return '사진'
+  return ''
 }
 </script>
 
@@ -280,9 +289,10 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
                   </span>
                 </td>
                 <td class="td-tag">
-                  <span v-if="p.memo" class="tag tag--memo">
-                    <StickyNote :size="14" />
-                    <span>메모</span>
+                  <span v-if="p.memo || p.images.length" class="tag tag--memo">
+                    <StickyNote v-if="p.memo" :size="14" />
+                    <ImageIcon v-if="p.images.length" :size="14" />
+                    <span>{{ tagLabel(p) }}</span>
                   </span>
                   <span v-else class="tag tag--none">—</span>
                 </td>

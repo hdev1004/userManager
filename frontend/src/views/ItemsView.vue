@@ -7,6 +7,7 @@ import {
   GripVertical,
   X,
   Tag,
+  ArrowDownAZ,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
@@ -116,10 +117,34 @@ async function createItem() {
     newItemName.value = ''
     newItemPrice.value = ''
     showAddItem.value = false
+    await sortActive((a, b) => a.price - b.price)
     toast.success('물품이 추가되었습니다.')
   } catch (e) {
     toast.error(errorMessage(e))
   }
+}
+
+async function sortActive(compare: (a: Item, b: Item) => number) {
+  if (!activeCatId.value) return
+  const catId = activeCatId.value
+  const sorted = [...items.value.filter((i) => i.category_id === catId)].sort(compare)
+  sorted.forEach((it, idx) => {
+    it.sort_order = idx + 1
+  })
+  const others = items.value.filter((i) => i.category_id !== catId)
+  items.value = [...others, ...sorted]
+  try {
+    const orders = sorted.map((c, idx) => ({ id: c.id, sort_order: idx + 1 }))
+    await itemsApi.reorder(catId, orders)
+  } catch (e) {
+    toast.error(errorMessage(e))
+    await loadAll()
+  }
+}
+
+async function sortByPrice() {
+  await sortActive((a, b) => a.price - b.price)
+  toast.success('가격순으로 정렬되었습니다.')
 }
 
 async function deleteItem(it: Item) {
@@ -214,6 +239,15 @@ async function onItemDragEnd() {
         </h3>
       </template>
       <template #actions>
+        <AppButton
+          size="small"
+          variant="ghost"
+          :disabled="!activeCatId || filtered.length < 2"
+          @click="sortByPrice"
+        >
+          <ArrowDownAZ :size="14" />
+          <span>가격순 정렬</span>
+        </AppButton>
         <AppButton size="small" variant="primary" :disabled="!activeCatId" @click="showAddItem = true">
           <Plus :size="14" />
           <span>물품 추가</span>
