@@ -13,6 +13,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
+import AppImageViewer from '@/components/ui/AppImageViewer.vue'
 import PaymentItemsEditor from '@/components/PaymentItemsEditor.vue'
 import { membersApi, type Member } from '@/api/members'
 import { paymentsApi, type PaymentItemInput, type PaymentMethod } from '@/api/payments'
@@ -34,6 +35,13 @@ const paymentMethod = ref<PaymentMethod>('CASH')
 const pendingImages = ref<File[]>([])
 const pendingPreviews = ref<string[]>([])
 const saving = ref(false)
+
+const viewerOpen = ref(false)
+const viewerIndex = ref(0)
+function openViewer(idx: number) {
+  viewerIndex.value = idx
+  viewerOpen.value = true
+}
 
 async function load() {
   try {
@@ -219,13 +227,14 @@ async function submit() {
           v-for="(url, idx) in pendingPreviews"
           :key="idx"
           class="gallery__item"
+          @click="openViewer(idx)"
         >
           <img :src="url" :alt="`첨부 이미지 ${idx + 1}`" />
           <button
             type="button"
             class="gallery__del"
             aria-label="삭제"
-            @click="removePending(idx)"
+            @click.stop="removePending(idx)"
           >
             <X :size="14" />
           </button>
@@ -254,6 +263,13 @@ async function submit() {
         <span>결제 등록</span>
       </AppButton>
     </div>
+
+    <AppImageViewer
+      :open="viewerOpen"
+      :images="pendingPreviews.map((src, i) => ({ id: i, src, alt: `첨부 이미지 ${i + 1}` }))"
+      v-model:index="viewerIndex"
+      @close="viewerOpen = false"
+    />
   </div>
 </template>
 
@@ -421,11 +437,17 @@ async function submit() {
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--color-line-soft);
+  cursor: zoom-in;
+  transition: transform 120ms ease;
+}
+.gallery__item:hover {
+  transform: scale(1.02);
 }
 .gallery__item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 .gallery__del {
   position: absolute;
