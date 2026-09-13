@@ -411,7 +411,7 @@ async function onItemDragEnd() {
   gap: 16px;
   padding: 6px 16px 6px 6px;
   border: 1px solid var(--color-line);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: #fff;
   min-height: 68px;
   transition: border-color 120ms ease, background 120ms ease;

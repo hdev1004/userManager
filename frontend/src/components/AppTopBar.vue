@@ -146,7 +146,7 @@ async function logout() {
   right: 0;
   background: #fff;
   border: var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   min-width: 220px;
   padding: 8px;

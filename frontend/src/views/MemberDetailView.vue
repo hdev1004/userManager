@@ -14,10 +14,12 @@ import {
   CreditCard,
   AlertTriangle,
   StickyNote,
+  Scissors,
 } from 'lucide-vue-next'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppModal from '@/components/ui/AppModal.vue'
+import PaymentPreviewModal from '@/components/PaymentPreviewModal.vue'
 import {
   membersApi,
   type Member,
@@ -44,6 +46,13 @@ const confirmDelete = ref(false)
 const deleting = ref(false)
 const confirmDeleteAll = ref(false)
 const deletingAll = ref(false)
+const previewOpen = ref(false)
+const previewPaymentId = ref<number | null>(null)
+
+function openPaymentPreview(paymentId: number) {
+  previewPaymentId.value = paymentId
+  previewOpen.value = true
+}
 
 async function loadMember() {
   try {
@@ -167,6 +176,14 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
             <span>결제</span>
           </AppButton>
           <AppButton
+            variant="danger"
+            size="large"
+            @click="confirmDelete = true"
+          >
+            <Trash2 :size="18" />
+            <span>회원삭제</span>
+          </AppButton>
+          <AppButton
             variant="outline"
             size="large"
             @click="router.push(`/members/${member.id}/edit`)"
@@ -174,18 +191,14 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
             <Pencil :size="18" />
             <span>회원정보 수정</span>
           </AppButton>
-          <AppButton
-            variant="danger-soft"
-            size="large"
-            @click="confirmDelete = true"
-          >
-            <Trash2 :size="18" />
-            <span>회원 삭제</span>
-          </AppButton>
         </div>
       </AppCard>
 
-      <AppCard padding="lg" style="margin-top: 24px">
+      <div class="section-divider" role="separator" aria-hidden="true">
+        <Scissors :size="16" class="section-divider__icon" />
+      </div>
+
+      <AppCard padding="lg">
         <template #header>
           <div class="paylist__head-l">
             <h3 class="paylist__title">결제 내역</h3>
@@ -255,7 +268,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
                 v-for="p in payments"
                 :key="p.id"
                 class="row"
-                @click="router.push(`/members/${member.id}/payments/${p.id}`)"
+                @click="openPaymentPreview(p.id)"
               >
                 <td class="td-date num">{{ fmtDate(p.paid_at) }}</td>
                 <td class="td-items">{{ itemsLabel(p.items) }}</td>
@@ -295,6 +308,13 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
         </div>
       </AppCard>
     </template>
+
+    <PaymentPreviewModal
+      :open="previewOpen"
+      :member-id="member?.id ?? null"
+      :payment-id="previewPaymentId"
+      @close="previewOpen = false"
+    />
 
     <AppModal :open="confirmDelete" title="회원 삭제" @close="confirmDelete = false">
       <p class="t-body-2" style="margin: 0">
@@ -406,6 +426,25 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
+.section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60%;
+  margin: 24px auto;
+  color: var(--color-text-tert);
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-line);
+}
+.section-divider__icon {
+  margin: 0 10px;
+  transform: rotate(90deg);
+}
 @media (max-width: 640px) {
   .actions {
     grid-template-columns: 1fr;
@@ -436,7 +475,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
   gap: 4px;
   height: 32px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-danger-soft);
   color: var(--color-danger);
   font: var(--font-caption);
@@ -444,7 +483,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
   transition: all 120ms ease;
 }
 .paylist__danger-btn:hover {
-  background: #ffd8dc;
+  background: #ffd0d4;
 }
 
 .warn {
@@ -453,7 +492,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
   padding: 16px;
   background: var(--color-danger-soft);
   color: var(--color-danger);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .seg {
@@ -497,7 +536,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
 .table-wrap {
   background: #fff;
   border: var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 .ptable {
@@ -580,7 +619,7 @@ function itemsLabel(items: { item_name: string; quantity: number }[]) {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-1);
   height: 30px;
   padding: 0 12px;
   border-radius: var(--radius-pill);

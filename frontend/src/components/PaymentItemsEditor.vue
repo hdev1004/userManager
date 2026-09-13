@@ -190,7 +190,7 @@ const selectedIds = computed(() =>
   font-size: 15px;
   color: var(--color-text-tert);
   border: 1.5px dashed var(--color-line);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--color-bg-page);
 }
 .cart__empty strong {
@@ -245,7 +245,7 @@ const selectedIds = computed(() =>
 .qty__btn {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-text-sub);
   display: inline-flex;
   align-items: center;
@@ -283,7 +283,7 @@ const selectedIds = computed(() =>
 .row__del {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-text-tert);
   display: inline-flex;
   align-items: center;

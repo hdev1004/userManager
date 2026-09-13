@@ -282,7 +282,7 @@ onMounted(() => {
 .kpi {
   background: #fff;
   border: var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 20px;
 }
 .kpi__v {

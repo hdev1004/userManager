@@ -296,7 +296,7 @@ onMounted(load)
 .stats__hero {
   background: #1f2937;
   color: #fff;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 24px 28px;
   display: flex;
   align-items: baseline;
@@ -331,7 +331,7 @@ onMounted(load)
 .stat {
   background: #fff;
   border: var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 14px 16px;
   display: flex;
   align-items: center;
@@ -415,7 +415,7 @@ onMounted(load)
   margin-top: 16px;
   background: #fff;
   border: var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 .ptable {
@@ -463,7 +463,7 @@ onMounted(load)
 .name-link {
   display: inline-block;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 17px;
   font-weight: 800;
   color: var(--color-primary);
@@ -506,7 +506,7 @@ onMounted(load)
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-1);
   height: 30px;
   padding: 0 12px;
   border-radius: var(--radius-pill);

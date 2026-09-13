@@ -364,7 +364,7 @@ async function submit() {
   padding: 12px;
   background: #fff;
   border: 2px solid var(--color-line);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   color: var(--color-text-sub);
   transition: all 120ms ease;
 }
@@ -418,7 +418,7 @@ async function submit() {
 .gallery__item {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--color-line-soft);
 }
@@ -433,7 +433,7 @@ async function submit() {
   right: 6px;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.55);
   color: white;
   display: inline-flex;
@@ -448,7 +448,7 @@ async function submit() {
   justify-content: center;
   gap: 6px;
   border: 1.5px dashed var(--color-line);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   color: var(--color-text-tert);
   cursor: pointer;
 }

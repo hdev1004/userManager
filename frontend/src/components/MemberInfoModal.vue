@@ -214,7 +214,7 @@ function goPayment(paymentId: number) {
   gap: 8px;
   padding: 20px 16px;
   background: var(--color-line-soft);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 .stat {
   display: flex;
